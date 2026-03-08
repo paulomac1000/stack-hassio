@@ -1,0 +1,51 @@
+{
+  "Backup": {
+    "Name": "Mosquitto-Monthly",
+    "Description": "Mosquitto MQTT broker configuration",
+    "Tags": ["config", "monthly"],
+
+    "TargetURL": "file:///backups/mosquitto",
+
+    "Sources": [
+      "/source/mosquitto/config/"
+    ],
+
+    "Settings": [
+      {
+        "Name": "encryption-module",
+        "Value": ""
+      },
+      {
+        "Name": "compression-module",
+        "Value": "zip"
+      },
+      {
+        "Name": "zip-compression-level",
+        "Value": "1"
+      },
+      {
+        "Name": "concurrency-max-threads",
+        "Value": "1"
+      },
+      {
+        "Name": "asynchronous-upload",
+        "Value": "false"
+      },
+      {
+        "Name": "keep-versions",
+        "Value": "5"
+      }
+    ],
+
+    "Filters": []
+  },
+
+  "Schedule": {
+    "ID": 3,
+    "Tags": ["config", "monthly"],
+    "Time": "2024-01-01T04:30:00",
+    "Repeat": "1M",
+    "AllowedDays": [],
+    "Rule": "30 4 1 * *"
+  }
+}

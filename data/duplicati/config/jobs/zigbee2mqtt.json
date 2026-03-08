@@ -1,0 +1,74 @@
+{
+  "Backup": {
+    "Name": "Zigbee2MQTT-Weekly",
+    "Description": "Zigbee2MQTT device database and configuration",
+    "Tags": ["critical", "weekly"],
+
+    "TargetURL": "file:///backups/zigbee2mqtt",
+
+    "Sources": [
+      "/source/zigbee2mqtt/"
+    ],
+
+    "Settings": [
+      {
+        "Name": "encryption-module",
+        "Value": ""
+      },
+      {
+        "Name": "compression-module",
+        "Value": "zip"
+      },
+      {
+        "Name": "zip-compression-level",
+        "Value": "1"
+      },
+      {
+        "Name": "blocksize",
+        "Value": "50kb"
+      },
+      {
+        "Name": "concurrency-max-threads",
+        "Value": "1"
+      },
+      {
+        "Name": "asynchronous-upload",
+        "Value": "false"
+      },
+      {
+        "Name": "run-script-before",
+        "Value": "/config/scripts/pre-backup.sh"
+      },
+      {
+        "Name": "run-script-after",
+        "Value": "/config/scripts/post-backup.sh"
+      },
+      {
+        "Name": "keep-versions",
+        "Value": "10"
+      }
+    ],
+
+    "Filters": [
+      {
+        "Order": 0,
+        "Include": false,
+        "Expression": "*.log"
+      },
+      {
+        "Order": 1,
+        "Include": false,
+        "Expression": "log/"
+      }
+    ]
+  },
+
+  "Schedule": {
+    "ID": 2,
+    "Tags": ["critical", "weekly"],
+    "Time": "2024-01-03T04:00:00",
+    "Repeat": "1W",
+    "AllowedDays": ["wed"],
+    "Rule": "0 4 * * 3"
+  }
+}

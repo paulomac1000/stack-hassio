@@ -1,0 +1,14 @@
+{
+    "python.testing.pytestEnabled": true,
+    "python.testing.pytestArgs": [
+        "tests",
+        "yolov5-app",
+        "data/hassio/custom_components/enea/tests"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.promptToConfigure": false,
+    "python.analysis.extraPaths": [
+        "./yolov5-app",
+        "./data/hassio/custom_components/enea"
+    ]
+}

@@ -1,0 +1,163 @@
+# ═══════════════════════════════════════════════════════════════
+# WARSTWA 3: WIRTUALNA (Better Thermostat)
+# ═══════════════════════════════════════════════════════════════
+
+# ──────────────────────────────────────────────────────────────
+# Better Thermostat - LivingRoom Main
+# ──────────────────────────────────────────────────────────────
+- sensor:
+    name: "BT LivingRoom Main Debug"
+    unique_id: "bt_livingroom_main_debug_sensor"
+    state: >
+      {% set state = states('climate.livingroom_main_better_thermostat') %}
+      {% set action = state_attr('climate.livingroom_main_better_thermostat', 'hvac_action') %}
+      {% if state == 'unavailable' %}UNAVAILABLE
+      {% elif action == 'heating' %}HEATING
+      {% elif action == 'idle' %}IDLE
+      {% else %}{{ state | upper }}{% endif %}
+    attributes:
+      climate_state: "{{ states('climate.livingroom_main_better_thermostat') }}"
+      hvac_action: "{{ state_attr('climate.livingroom_main_better_thermostat', 'hvac_action') }}"
+      current_temperature: "{{ state_attr('climate.livingroom_main_better_thermostat', 'current_temperature') | default(0) | round(1) }}"
+      target_temperature: "{{ state_attr('climate.livingroom_main_better_thermostat', 'temperature') | default(0) | round(1) }}"
+      linked_trv: "TRV_1, TRV_2"
+      area: "Salon"
+      device_type: "Better Thermostat"
+      virtual_calibration: "{{ states('sensor.thermostat_livingroom_virtual_calibrated') | default('N/A') }}"
+      virtual_force: "{{ states('sensor.thermostat_livingroom_virtual_force') | default('N/A') }}"
+
+# ──────────────────────────────────────────────────────────────
+# Better Thermostat - LivingRoom Entrance (WThermostat)
+# ──────────────────────────────────────────────────────────────
+- sensor:
+    name: "BT LivingRoom Entrance Debug"
+    unique_id: "bt_livingroom_entrance_debug_sensor"
+    state: >
+      {% set state = states('climate.livingroom_entrance_better_thermostat') %}
+      {% if state == 'unavailable' %}UNAVAILABLE
+      {% elif state_attr('climate.livingroom_entrance_better_thermostat', 'hvac_action') == 'heating' %}HEATING
+      {% else %}IDLE{% endif %}
+    attributes:
+      climate_state: "{{ states('climate.livingroom_entrance_better_thermostat') }}"
+      hvac_action: "{{ state_attr('climate.livingroom_entrance_better_thermostat', 'hvac_action') }}"
+      current_temperature: "{{ state_attr('climate.livingroom_entrance_better_thermostat', 'current_temperature') | default(0) | round(1) }}"
+      target_temperature: "{{ state_attr('climate.livingroom_entrance_better_thermostat', 'temperature') | default(0) | round(1) }}"
+      linked_device: "WThermostat"
+      area: "Salon"
+      device_type: "Better Thermostat"
+
+# ──────────────────────────────────────────────────────────────
+# Better Thermostat - Bedroom
+# ──────────────────────────────────────────────────────────────
+- sensor:
+    name: "BT Bedroom Debug"
+    unique_id: "bt_bedroom_debug_sensor"
+    state: >
+      {% set state = states('climate.bedroom_better_thermostat') %}
+      {% if state == 'unavailable' %}UNAVAILABLE
+      {% elif state_attr('climate.bedroom_better_thermostat', 'hvac_action') == 'heating' %}HEATING
+      {% else %}IDLE{% endif %}
+    attributes:
+      climate_state: "{{ states('climate.bedroom_better_thermostat') }}"
+      hvac_action: "{{ state_attr('climate.bedroom_better_thermostat', 'hvac_action') }}"
+      current_temperature: "{{ state_attr('climate.bedroom_better_thermostat', 'current_temperature') | default(0) | round(1) }}"
+      target_temperature: "{{ state_attr('climate.bedroom_better_thermostat', 'temperature') | default(0) | round(1) }}"
+      linked_trv: "TRV Bedroom"
+      area: "Sypialnia"
+      device_type: "Better Thermostat"
+      virtual_calibration: "{{ states('sensor.thermostat_bedroom_virtual_calibrated') | default('N/A') }}"
+
+# ──────────────────────────────────────────────────────────────
+# Better Thermostat - Bedroom AC (unavailable monitor)
+# ──────────────────────────────────────────────────────────────
+- sensor:
+    name: "BT Bedroom AC Debug"
+    unique_id: "bt_bedroom_ac_debug_sensor"
+    state: >
+      {% set state = states('climate.bedroom_ac_better_thermostat') %}
+      {% if state == 'unavailable' %}UNAVAILABLE
+      {% elif state_attr('climate.bedroom_ac_better_thermostat', 'hvac_action') == 'heating' %}HEATING
+      {% elif state_attr('climate.bedroom_ac_better_thermostat', 'hvac_action') == 'cooling' %}COOLING
+      {% else %}IDLE{% endif %}
+    attributes:
+      climate_state: "{{ states('climate.bedroom_ac_better_thermostat') }}"
+      hvac_action: "{{ state_attr('climate.bedroom_ac_better_thermostat', 'hvac_action') }}"
+      linked_device: "AC Bedroom"
+      area: "Sypialnia"
+      device_type: "Better Thermostat AC"
+      unavailable_reason: >
+        {% if states('climate.bedroom_ac_better_thermostat') == 'unavailable' %}
+          {% if states('sensor.fuse_air_conditioner_power') | float(0) == 0 %}'fuse_off'
+          {% else %}'device_offline'{% endif %}
+        {% else %}'none'{% endif %}
+
+# ──────────────────────────────────────────────────────────────
+# Better Thermostat - LivingRoom AC (unavailable monitor)
+# ──────────────────────────────────────────────────────────────
+- sensor:
+    name: "BT LivingRoom AC Debug"
+    unique_id: "bt_livingroom_ac_debug_sensor"
+    state: >
+      {% set state = states('climate.livingroom_ac_better_thermostat') %}
+      {% if state == 'unavailable' %}UNAVAILABLE
+      {% elif state_attr('climate.livingroom_ac_better_thermostat', 'hvac_action') == 'heating' %}HEATING
+      {% elif state_attr('climate.livingroom_ac_better_thermostat', 'hvac_action') == 'cooling' %}COOLING
+      {% else %}IDLE{% endif %}
+    attributes:
+      climate_state: "{{ states('climate.livingroom_ac_better_thermostat') }}"
+      hvac_action: "{{ state_attr('climate.livingroom_ac_better_thermostat', 'hvac_action') }}"
+      linked_device: "AC LivingRoom"
+      area: "Salon"
+      device_type: "Better Thermostat AC"
+      unavailable_reason: >
+        {% if states('climate.livingroom_ac_better_thermostat') == 'unavailable' %}
+          {% if states('sensor.fuse_air_conditioner_power') | float(0) == 0 %}'fuse_off'
+          {% else %}'device_offline'{% endif %}
+        {% else %}'none'{% endif %}
+
+# ──────────────────────────────────────────────────────────────
+# Better Thermostat - Piesek
+# ──────────────────────────────────────────────────────────────
+- sensor:
+    name: "BT Piesek Debug"
+    unique_id: "bt_piesek_debug_sensor"
+    state: >
+      {% set state = states('climate.piesek_better_thermostat') %}
+      {% if state == 'unavailable' %}UNAVAILABLE
+      {% elif state_attr('climate.piesek_better_thermostat', 'hvac_action') == 'heating' %}HEATING
+      {% else %}IDLE{% endif %}
+    attributes:
+      climate_state: "{{ states('climate.piesek_better_thermostat') }}"
+      hvac_action: "{{ state_attr('climate.piesek_better_thermostat', 'hvac_action') }}"
+      current_temperature: "{{ state_attr('climate.piesek_better_thermostat', 'current_temperature') | default(0) | round(1) }}"
+      target_temperature: "{{ state_attr('climate.piesek_better_thermostat', 'temperature') | default(0) | round(1) }}"
+      linked_trv: "TRV Piesek"
+      area: "Piesek"
+      device_type: "Better Thermostat"
+
+# ──────────────────────────────────────────────────────────────
+# Virtual Calibration Summary
+# ──────────────────────────────────────────────────────────────
+- sensor:
+    name: "Virtual Calibration Summary"
+    unique_id: "virtual_calibration_summary_sensor"
+    state: >
+      {% set bedroom = states('sensor.thermostat_bedroom_virtual_calibrated') | float(0) %}
+      {% set livingroom = states('sensor.thermostat_livingroom_virtual_calibrated') | float(0) %}
+      {% if bedroom == 0 and livingroom == 0 %}NO_CALIBRATION
+      {% elif bedroom != 0 or livingroom != 0 %}CALIBRATED
+      {% else %}UNKNOWN{% endif %}
+    attributes:
+      bedroom_calibration: "{{ states('sensor.thermostat_bedroom_virtual_calibrated') | float(0) | round(2) }}"
+      livingroom_calibration: "{{ states('sensor.thermostat_livingroom_virtual_calibrated') | float(0) | round(2) }}"
+      bedroom_input: "{{ states('input_number.thermostat_bedroom_virtual_calibration') | float(0) | round(2) }}"
+      livingroom_input: "{{ states('input_number.thermostat_livingroom_virtual_calibration') | float(0) | round(2) }}"
+      total_calibrated_zones: >
+        {% set count = 0 %}
+        {% if states('sensor.thermostat_bedroom_virtual_calibrated') | float(0) != 0 %}
+          {% set count = count + 1 %}
+        {% endif %}
+        {% if states('sensor.thermostat_livingroom_virtual_calibrated') | float(0) != 0 %}
+          {% set count = count + 1 %}
+        {% endif %}
+        {{ count }}

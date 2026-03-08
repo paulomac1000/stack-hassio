@@ -1,0 +1,15 @@
+# ==============================================================================
+# GO2RTC CONFIGURATION TEMPLATE
+# Skopiuj ten plik do go2rtc.yaml (jest w .gitignore jeśli używasz !secret)
+# lub ustaw GO2RTC_PASSWORD w .env
+# ==============================================================================
+#
+# go2rtc reads env vars using ${VARNAME} syntax.
+# GO2RTC_PASSWORD is passed via docker-compose.yml homeassistant.environment.
+
+api:
+  password: ${GO2RTC_PASSWORD}
+  username: admin
+rtsp:
+  password: ${GO2RTC_PASSWORD}
+  username: admin

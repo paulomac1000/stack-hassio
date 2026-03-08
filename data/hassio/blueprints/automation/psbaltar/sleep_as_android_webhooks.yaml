@@ -1,0 +1,370 @@
+blueprint:
+  name: Sleep as Android webhook handler
+  description: 'Home Assistant blueprint for handling Sleep as Android webhooks events
+
+
+    In Sleep as Android app, set Webhooks URL to:
+
+    https://<home-assistant-host>/api/webhook/<webhook-id>
+
+
+    Sleep as Android events: https://docs.sleep.urbandroid.org/services/automation.html#events
+
+    Blueprint based on above documentation as of 2022-03-11
+
+
+    Some events include additional data (''value1'' and ''value2''). This blueprint
+    makes them available as template variables ''value1'' and ''value2''. ''event''
+    is also available as a variable if needed.
+
+
+    Note:
+
+    Some Sleep as Android events can be triggered several hundred times per night.
+    Specific events can be disabled in the app. Otherwise, filtering this automation
+    from the logs may be warranted (https://www.home-assistant.io/integrations/recorder/#configure-filter)
+
+    '
+  source_url: https://gist.github.com/psbaltar/a954ef9c8d280c0b816ad875827ac993
+  domain: automation
+  input:
+    webhook:
+      name: Webhook ID
+      description: Webhook ID
+    localonly:
+      name: Local Only
+      description: Only accessible from the local network
+      default: false
+      selector:
+        boolean: {}
+    person:
+      name: Person (optional)
+      description: Person to track (optional if Zone Check not enabled)
+      default: []
+      selector:
+        entity:
+          domain:
+          - person
+          multiple: false
+    zone:
+      name: Zone (optional)
+      description: Check if person is in this zone (optional if Zone Check not enabled)
+      default: []
+      selector:
+        entity:
+          domain:
+          - zone
+          multiple: false
+    zone_check:
+      name: Zone Check
+      description: Enable to run automation only if Person is in Zone
+      default: false
+      selector:
+        boolean: {}
+    sleep_tracking_started:
+      name: sleep_tracking_started
+      description: ''
+      default: []
+      selector:
+        action: {}
+    sleep_tracking_stopped:
+      name: sleep_tracking_stopped
+      description: ''
+      default: []
+      selector:
+        action: {}
+    sleep_tracking_paused:
+      name: sleep_tracking_paused
+      description: ''
+      default: []
+      selector:
+        action: {}
+    sleep_tracking_resumed:
+      name: sleep_tracking_resumed
+      description: ''
+      default: []
+      selector:
+        action: {}
+    alarm_snooze_clicked:
+      name: alarm_snooze_clicked
+      description: 'You have snoozed a ringing alarm.
+
+
+        We are sending the following values:
+
+        - value1: UNIX timestamp of the alarm start time, example: "1582719660934"
+
+        - value2: alarm label, example: "label" (Any tabs and newline characters in
+        the label will be removed before sending)
+
+        '
+      default: []
+      selector:
+        action: {}
+    alarm_snooze_canceled:
+      name: alarm_snooze_canceled
+      description: "You have a canceled an alarm that is currently snoozed.\n\nWe
+        are sending the following values:\n\n  - value1: UNIX timestamp of the alarm
+        start time, example: \"1582719660934\"\n  \n  - value2: alarm label, example:
+        \"label\" (Any tabs and newline characters in the label will be removed before
+        sending)\n"
+      default: []
+      selector:
+        action: {}
+    time_to_bed_alarm_alert:
+      name: time_to_bed_alarm_alert
+      description: "Fires when you get a bedtime notification.\n\nWe are sending the
+        following values:\n\n  - value1: UNIX timestamp of the alarm start time (the
+        alarm which triggered the bedtime notification, based on your ideal daily
+        sleep income), example: \"1582719660934\"\n"
+      default: []
+      selector:
+        action: {}
+    alarm_alert_start:
+      name: alarm_alert_start
+      description: "Fires when alarm starts.\n\nWe are sending the following values:\n\n
+        \ - value1: UNIX timestamp of the alarm start time, example: \"1582719660934\"\n
+        \ \n  - value2: alarm label, example: \"label\" (Any tabs and newline characters
+        in the label will be removed before sending)\n"
+      default: []
+      selector:
+        action: {}
+    alarm_alert_dismiss:
+      name: alarm_alert_dismiss
+      description: "Fires when you dismiss alarm (after you solve CAPTCHA, if it’s
+        set).\n\nWe are sending the following values:\n\n  - value1: UNIX timestamp
+        of the alarm start time, example: \"1582719660934\"\n  \n  - value2: alarm
+        label, example: \"label\" (Any tabs and newline characters in the label will
+        be removed before sending)\n"
+      default: []
+      selector:
+        action: {}
+    alarm_skip_next:
+      name: alarm_skip_next
+      description: "Fires when you tap dismiss an alarm from notification before it
+        actually rings.\n\nWe are sending the following values:\n\n  - value1: UNIX
+        timestamp of the alarm start time, example: \"1582719660934\"\n\n  - value2:
+        alarm label, example: \"label\" (Any tabs and newline characters in the label
+        will be removed before sending)\n"
+      default: []
+      selector:
+        action: {}
+    before_alarm:
+      name: show_skip_next_alarm
+      description: 'Note: As of 2023-05-10, the documentation is incorrect. The app
+        sends ''before_alarm'' instead of ''show_skip_next_alarm''. This blueprint
+        handles it correctly, but leaves the displayed name to be consistent with
+        the documentation
+
+
+        Fires exactly 1 hour before the next alarm is triggered.
+
+
+        value1: UNIX timestamp of the alarm start time, example: "1582719660934"
+
+        '
+      default: []
+      selector:
+        action: {}
+    rem:
+      name: rem
+      description: Fires when we estimate the start of REM phase.
+      default: []
+      selector:
+        action: {}
+    smart_period:
+      name: smart_period
+      description: Fires at the start of the smart period.
+      default: []
+      selector:
+        action: {}
+    before_smart_period:
+      name: before_smart_period
+      description: "Fires 45 minutes before the start of smart period.\n\nWe are sending
+        the following value:\n\n  - value: alarm label, example: \"label\" (Any tabs
+        and newline characters in the label will be removed before sending)\n"
+      default: []
+      selector:
+        action: {}
+    lullaby_start:
+      name: lullaby_start
+      description: Fires when lullaby starts playing.
+      default: []
+      selector:
+        action: {}
+    lullaby_stop:
+      name: lullaby_stop
+      description: Fires when lullaby is stopped (either manually or automatically).
+      default: []
+      selector:
+        action: {}
+    lullaby_volume_down:
+      name: lullaby_volume_down
+      description: Fires when we detect you fell asleep and starting lowering the
+        volume of lullabies.
+      default: []
+      selector:
+        action: {}
+    deep_sleep:
+      name: deep_sleep
+      description: 'Fires when we detect you going into deep sleep phase. Warning:
+        This may result in lots of events during the night and may not exactly fit
+        the resulting sleep graph as we can only detect phases reliably from whole-night
+        data.'
+      default: []
+      selector:
+        action: {}
+    light_sleep:
+      name: light_sleep
+      description: 'Fires when we detect you going into light sleep phase. Warning:
+        This may result in lots of events during the night and may not exactly fit
+        the resulting sleep graph as we can only detect phases reliably from whole-night
+        data.'
+      default: []
+      selector:
+        action: {}
+    awake:
+      name: awake
+      description: Fires when we detect you woke up.
+      default: []
+      selector:
+        action: {}
+    not_awake:
+      name: not_awake
+      description: Fires when we detect you fell asleep.
+      default: []
+      selector:
+        action: {}
+    apnea_alarm:
+      name: apnea_alarm
+      description: Fires when we detect a significant dip in your oxygen levels.
+      default: []
+      selector:
+        action: {}
+    antisnoring:
+      name: antisnoring
+      description: Fires when antisnoring is triggered.
+      default: []
+      selector:
+        action: {}
+    sound_event_snore:
+      name: sound_event_snore
+      description: Fires when we detect snoring.
+      default: []
+      selector:
+        action: {}
+    sound_event_talk:
+      name: sound_event_talk
+      description: Fires when we detect talking.
+      default: []
+      selector:
+        action: {}
+    sound_event_cough:
+      name: sound_event_cough
+      description: Fires when we detect coughing.
+      default: []
+      selector:
+        action: {}
+    sound_event_baby:
+      name: sound_event_baby
+      description: Fires when we detect baby cry.
+      default: []
+      selector:
+        action: {}
+    sound_event_laugh:
+      name: sound_event_laugh
+      description: Fires when we detect laughter.
+      default: []
+      selector:
+        action: {}
+mode: parallel
+variables:
+  var_zone_check: !input zone_check
+trigger:
+  - platform: webhook
+    webhook_id: !input webhook
+    allowed_methods:
+      - POST
+    local_only: !input localonly
+condition:
+  condition: or
+  conditions:
+    - '{{ not var_zone_check }}'
+    - condition: and
+      conditions:
+        - '{{ var_zone_check }}'
+        - condition: zone
+          entity_id: !input person
+          zone: !input zone
+action:
+  - variables:
+      event: '{{ trigger.json.event }}'
+      value1: '{{ trigger.json.value1 if trigger.json.value1 is defined }}'
+      value2: '{{ trigger.json.value2 if trigger.json.value2 is defined }}'
+  - choose:
+    - conditions: '{{ event == ''sleep_tracking_started'' }}'
+      sequence: !input sleep_tracking_started
+    - conditions: '{{ event == ''sleep_tracking_stopped'' }}'
+      sequence: !input sleep_tracking_stopped
+    - conditions: '{{ event == ''sleep_tracking_paused'' }}'
+      sequence: !input sleep_tracking_paused
+    - conditions: '{{ event == ''sleep_tracking_resumed'' }}'
+      sequence: !input sleep_tracking_resumed
+    - conditions: '{{ event == ''alarm_snooze_clicked'' }}'
+      sequence: !input alarm_snooze_clicked
+    - conditions: '{{ event == ''alarm_snooze_canceled'' }}'
+      sequence: !input alarm_snooze_canceled
+    - conditions: '{{ event == ''time_to_bed_alarm_alert'' }}'
+      sequence: !input time_to_bed_alarm_alert
+    - conditions: '{{ event == ''alarm_alert_start'' }}'
+      sequence: !input alarm_alert_start
+    - conditions: '{{ event == ''alarm_alert_dismiss'' }}'
+      sequence: !input alarm_alert_dismiss
+    - conditions: '{{ event == ''alarm_skip_next'' }}'
+      sequence: !input alarm_skip_next
+    - conditions: '{{ event == ''before_alarm'' }}'
+      sequence: !input before_alarm
+    - conditions: '{{ event == ''rem'' }}'
+      sequence: !input rem
+    - conditions: '{{ event == ''smart_period'' }}'
+      sequence: !input smart_period
+    - conditions: '{{ event == ''before_smart_period'' }}'
+      sequence: !input before_smart_period
+    - conditions: '{{ event == ''lullaby_start'' }}'
+      sequence: !input lullaby_start
+    - conditions: '{{ event == ''lullaby_stop'' }}'
+      sequence: !input lullaby_stop
+    - conditions: '{{ event == ''lullaby_volume_down'' }}'
+      sequence: !input lullaby_volume_down
+    - conditions: '{{ event == ''deep_sleep'' }}'
+      sequence: !input deep_sleep
+    - conditions: '{{ event == ''light_sleep'' }}'
+      sequence: !input light_sleep
+    - conditions: '{{ event == ''awake'' }}'
+      sequence: !input awake
+    - conditions: '{{ event == ''not_awake'' }}'
+      sequence: !input not_awake
+    - conditions: '{{ event == ''apnea_alarm'' }}'
+      sequence: !input apnea_alarm
+    - conditions: '{{ event == ''antisnoring'' }}'
+      sequence: !input antisnoring
+    - conditions: '{{ event == ''sound_event_snore'' }}'
+      sequence: !input sound_event_snore
+    - conditions: '{{ event == ''sound_event_talk'' }}'
+      sequence: !input sound_event_talk
+    - conditions: '{{ event == ''sound_event_cough'' }}'
+      sequence: !input sound_event_cough
+    - conditions: '{{ event == ''sound_event_baby'' }}'
+      sequence: !input sound_event_baby
+    - conditions: '{{ event == ''sound_event_laugh'' }}'
+      sequence: !input sound_event_laugh
+    default:
+      - service: persistent_notification.create
+        data:
+          title: Sleep As Android blueprint exception
+          message: 'Caught unhandled event: {{ event }}'
+          notification_id: sleep_default_action_notification
+      - service: system_log.write
+        data:
+          level: warning
+          message: 'Sleep As Android blueprint caught unhandled event: {{ event }}'

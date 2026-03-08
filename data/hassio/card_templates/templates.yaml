@@ -1,0 +1,36 @@
+button_card:
+  card:
+    type: custom:button-card
+    entity: VARIABLE_ENTITY
+    name: VARIABLE_NAME
+    icon: VARIABLE_ICON
+    tap_action:
+      action: toggle
+  grid:
+    cols: 1
+    rows: 2
+blinds_card:
+  card:
+    type: horizontal-stack
+    cards:
+      - type: custom:button-card
+        entity: VARIABLE_CLOSE_ENTITY
+        name: Zamknij
+        icon: mdi:window-shutter
+        tap_action:
+          action: toggle
+      - type: custom:button-card
+        entity: VARIABLE_OPEN_ENTITY
+        name: Otwórz
+        icon: mdi:window-shutter-open
+        tap_action:
+          action: toggle
+      - type: custom:button-card
+        entity: VARIABLE_STOP_ENTITY
+        name: Zatrzymaj
+        icon: mdi:window-shutter-alert
+        tap_action:
+          action: toggle
+  grid:
+    cols: 1
+    rows: 3

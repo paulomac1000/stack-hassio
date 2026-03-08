@@ -1,0 +1,155 @@
+# ==============================================================================
+# SMART-HOME STACK - .gitignore
+# Code-First Repository for Home Assistant + Docker Compose
+# ==============================================================================
+
+# ==============================================================================
+# SECTION 1: SECRETS AND CREDENTIALS (CRITICAL - NEVER COMMIT!)
+# ==============================================================================
+.env
+data/hassio/secrets.yaml
+data/hassio/hassio-382116-214eb11e0073.json
+data/mqtt/config/pwfile
+
+# The entire .storage directory contains tokens, auth, certificates, and runtime state
+data/hassio/.storage/
+
+# ==============================================================================
+# SECTION 2: DATABASES (global patterns)
+# ==============================================================================
+*.db
+*.db-shm
+*.db-wal
+*.db.backup*
+*.db.corrupt*
+
+# ==============================================================================
+# SECTION 3: LOGS (global patterns)
+# ==============================================================================
+*.log
+*.log.*
+*.log.fault
+*.fault
+
+# ==============================================================================
+# SECTION 4: HOME ASSISTANT - BINARIES AND RUNTIME
+# ==============================================================================
+# HA binaries (over 1GB)
+data/hassio/core
+data/hassio/go2rtc-*
+
+# Runtime directories
+data/hassio/deps/
+data/hassio/data/
+data/hassio/.cloud/
+data/hassio/image/
+
+# TTS cache (thousands of audio files)
+data/hassio/tts/
+
+# Backups (tens of GB)
+data/hassio/backups/
+
+# HA system files
+data/hassio/.HA_VERSION
+data/hassio/.ha_run.lock
+
+# ==============================================================================
+# SECTION 5: HOME ASSISTANT - INTEGRATION RUNTIME FILES
+# ==============================================================================
+data/hassio/govee_learning.yaml
+data/hassio/known_devices.yaml
+data/hassio/solcast_solar/
+data/hassio/pstryk_cache.json
+# HA-generated Python requirements (not config)
+data/hassio/requirements.txt
+
+# ==============================================================================
+# SECTION 6: HOME ASSISTANT - WWW (LARGE FILES)
+# ==============================================================================
+# Camera recordings (14GB+)
+data/hassio/www/archive/
+
+# Components downloaded by HACS (managed automatically)
+data/hassio/www/community/
+
+# ==============================================================================
+# SECTION 6B: HOME ASSISTANT - CUSTOM COMPONENTS (EXTERNAL CODE)
+# =================================com=============================================
+# Custom components are installed by HACS or downloaded from external repositories
+# We do not track third-party code - only our own configuration
+data/hassio/custom_components/
+
+# ==============================================================================
+# SECTION 7: PYTHON - CACHE AND VIRTUAL ENVIRONMENTS
+# ==============================================================================
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+venv/
+.venv/
+env/
+.env/
+
+# ==============================================================================
+# SECTION 8: NESTED GIT REPOSITORIES
+# ==============================================================================
+# creative-button-card-templates was a nested git repo - directory removed
+data/hassio/creative-button-card-templates/
+
+# ==============================================================================
+# SECTION 9: ZIGBEE2MQTT - RUNTIME
+# ==============================================================================
+data/z2m/log/
+data/z2m/tmp_backups/
+data/z2m/state.json
+data/z2m/*backup*
+
+# ==============================================================================
+# SECTION 10: MOSQUITTO (MQTT) - RUNTIME
+# ==============================================================================
+data/mqtt/data/
+data/mqtt/log/
+
+# ==============================================================================
+# SECTION 11: DUPLICATI - RUNTIME
+# ==============================================================================
+data/duplicati/config/logs/
+data/duplicati/staging/
+
+# ==============================================================================
+# SECTION 12: MACHINE LEARNING MODELS (LARGE FILES)
+# ==============================================================================
+# YOLO
+*.pt
+
+# Vosk
+*.mdl
+*.fst
+*.ie
+*.mat
+*.dubm
+*.stats
+data/vosk/data/vosk-model-*/
+
+# ==============================================================================
+# SECTION 13: FILEBROWSER
+# ==============================================================================
+filebrowser/*.db
+
+# ==============================================================================
+# SECTION 14: TEMPORARY FILES
+# ==============================================================================
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# ==============================================================================
+# SECTION 15: SYSTEM
+# ==============================================================================
+.DS_Store
+Thumbs.db
+desktop.ini

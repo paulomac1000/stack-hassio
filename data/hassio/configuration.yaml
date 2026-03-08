@@ -1,0 +1,193 @@
+# Loads default set of integrations. Do not remove.
+homeassistant:
+  allowlist_external_dirs:
+    - /config
+    - /config/www
+    - /config/www/archive
+    - /config/www/archive/camera_front_door
+    - /config/www/archive/backyard_camera
+    - /config/www/archive/camera_gate
+    - /config/www/archive/camera_livingroom
+  external_url: "https://hassio.cleverdevelopment.pl"
+  internal_url: "http://192.168.0.101:8123"
+
+logger:
+  default: info
+  logs:
+    homeassistant.components.rest_command: critical
+    homeassistant.components.automation.watchdog_openbk_devices: critical
+    custom_components.xiaomi_miot.core.device.careli.fryer.maf10a: critical
+    custom_components.xiaomi_miot.fan: critical
+    homeassistant.util.logging: critical
+    homeassistant.components.onvif: warning
+    onvif: warning
+    zeep: warning
+    custom_components.tuya_local.device: error
+
+default_config:
+
+notify:
+  - name: notification_file_log
+    platform: file
+    filename: notifications.log
+    timestamp: false
+
+utility_meter:
+  socket_kitchen_dishwasher_daily_consumption:
+    source: sensor.dishwasher_energy_today
+    cycle: daily
+    unique_id: socket_kitchen_dishwasher_daily_consumption
+  socket_kitchen_dishwasher_weekly_consumption:
+    source: sensor.dishwasher_energy_today
+    cycle: weekly
+    unique_id: socket_kitchen_dishwasher_weekly_consumption
+  socket_kitchen_dishwasher_monthly_consumption:
+    source: sensor.dishwasher_energy_today
+    cycle: monthly
+    unique_id: socket_kitchen_dishwasher_monthly_consumption
+  socket_kitchen_fridge_daily_consumption:
+    source: sensor.fridge_energy_today
+    cycle: daily
+    unique_id: socket_kitchen_fridge_daily_consumption
+  socket_kitchen_fridge_weekly_consumption:
+    source: sensor.fridge_energy_today
+    cycle: weekly
+    unique_id: socket_kitchen_fridge_weekly_consumption
+  socket_kitchen_fridge_monthly_consumption:
+    source: sensor.fridge_energy_today
+    cycle: monthly
+    unique_id: socket_kitchen_fridge_monthly_consumption
+  socket_piesek_pc_daily_consumption:
+    source: sensor.pc_energy_today
+    cycle: daily
+    unique_id: socket_piesek_pc_daily_consumption
+  socket_piesek_pc_weekly_consumption:
+    source: sensor.pc_energy_today
+    cycle: weekly
+    unique_id: socket_piesek_pc_weekly_consumption
+  socket_piesek_pc_monthly_consumption:
+    source: sensor.pc_energy_today
+    cycle: monthly
+    unique_id: socket_piesek_pc_monthly_consumption
+  socket_bedroom_power_strip_daily_consumption:
+    source: sensor.power_strip_energy_today
+    cycle: daily
+    unique_id: socket_bedroom_power_strip_daily_consumption
+  socket_bedroom_power_strip_weekly_consumption:
+    source: sensor.power_strip_energy_today
+    cycle: weekly
+    unique_id: socket_bedroom_power_strip_weekly_consumption
+  socket_bedroom_power_strip_monthly_consumption:
+    source: sensor.power_strip_energy_today
+    cycle: monthly
+    unique_id: socket_bedroom_power_strip_monthly_consumption
+
+# device_tracker:
+#  - platform: ubus
+#    host: 192.168.0.200
+#    username: root
+#    password: !secret openwrt_root
+
+# aquanet:
+#    email: "pawel.maciejewski95@gmail.com"
+#    password: !secret aquanet
+
+fbservice:
+  city: "${FBSERVICE_CITY}"
+  street: "${FBSERVICE_STREET}"
+  number: "${FBSERVICE_NUMBER}"
+
+monit:
+  host: "192.168.0.101"
+  port: 2812
+  username: "admin"
+  password: !secret monit
+
+rest_command:
+  openbk_restart:
+    url: "http://{{ ip }}/ha_discovery?prefix=homeassistant"
+  wthermostat_restart:
+    url: "http://192.168.0.209/save_network?i=WThermostat&s=PabloSPOT_secondary&p=___NOCHANGE___&apfb=true&mq=true&ms=192.168.0.101&mo=1883&mu=&mp=&mt=wthermostat-14505154&mqhass=true"
+  wakeword_start:
+    url: "http://localhost:8181/wakeword/start"
+    method: post
+  wakeword_stop:
+    url: "http://localhost:8181/wakeword/stop"
+    method: post
+
+shell_command:
+  # TODO: !secret inside a quoted string is NOT processed by HA's YAML loader —
+  # it becomes a literal string "!secret openwrt", not the secret value.
+  # Fix: replace with an input_text entity or a script that passes the secret at YAML level.
+  restart_router_main: "sshpass -p !secret openwrt ssh root@192.168.0.1 reboot"
+  restart_router_secondary: "sshpass -p !secret openwrt ssh root@192.168.0.200 reboot"
+  ping_device: "ping -c 1 -W 2 {{ ip }} > /dev/null 2>&1"
+
+binary_sensor:
+  - platform: meteoalarm
+    country: "poland"
+    province: "Poznań"
+    language: en-GB
+
+sensor:
+  - platform: pgnig_gas_sensor
+    username: !secret pgnig_username
+    password: !secret pgnig
+  - platform: sunday_trading
+
+http:
+  # allow external access (cloudflared)
+  use_x_forwarded_for: true
+  trusted_proxies:
+    - 127.0.0.1
+    - ::1
+    - 192.168.0.0/16
+    - 172.16.0.0/12
+
+google_assistant:
+  project_id: hassio-382116
+  service_account: !include hassio-382116-214eb11e0073.json
+  exposed_domains:
+    - alarm_control_panel
+    - camera
+    - group
+    - input_boolean
+    - input_select
+    - scene
+    - script
+    - switch
+    - fan
+    - light
+    - lock
+    - cover
+    - media_player
+    - climate
+    - vacuum
+    - sensor
+    - humidifier
+
+remote_homeassistant:
+  instances:
+    - host: 10.8.0.4
+      port: 8123
+      secure: false
+      verify_ssl: false
+      access_token: !secret remote_hassio
+      entity_prefix: "remote_"
+
+# Load frontend themes from the themes folder
+frontend:
+  themes: !include_dir_merge_named themes
+
+# Text to speech
+tts:
+  - platform: google_translate
+
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
+
+# ═══════════════════════════════════════════════════════════════
+# TEMPLATE SENSORS - ORGANIZED BY LAYERS
+# ═══════════════════════════════════════════════════════════════
+template: !include_dir_merge_list templates/heating/

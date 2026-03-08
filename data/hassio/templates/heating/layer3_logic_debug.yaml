@@ -1,0 +1,168 @@
+# ═══════════════════════════════════════════════════════════════
+# WARSTWA 4: LOGICZNA (Automatyzacje)
+# ═══════════════════════════════════════════════════════════════
+
+# ──────────────────────────────────────────────────────────────
+# Advanced Heating Control V5 - Summary
+# ──────────────────────────────────────────────────────────────
+- sensor:
+    name: "Heating Control V5 Summary"
+    unique_id: "heating_control_v5_summary_sensor"
+    state: >
+      {% set autos = [
+        'automation.advanced_heating_control_living_room',
+        'automation.advanced_heating_control_piesek',
+        'automation.advanced_heating_control_bedroom',
+        'automation.advanced_heating_control_livingroom_ac',
+        'automation.advanced_heating_control_bedroom_ac'
+      ] %}
+      {% set active = autos | selectattr('entity_id', 'in', states.automation | map(attribute='entity_id') | list) | selectattr('state', 'eq', 'on') | list | length %}
+      {% if active == 5 %}ALL_ACTIVE
+      {% elif active == 0 %}ALL_INACTIVE
+      {% else %}{{ active }}/5_ACTIVE{% endif %}
+    attributes:
+      total_automations: 5
+      active_count: >
+        {% set autos = [
+          'automation.advanced_heating_control_living_room',
+          'automation.advanced_heating_control_piesek',
+          'automation.advanced_heating_control_bedroom',
+          'automation.advanced_heating_control_livingroom_ac',
+          'automation.advanced_heating_control_bedroom_ac'
+        ] %}
+        {{ autos | selectattr('entity_id', 'in', states.automation | map(attribute='entity_id') | list) | selectattr('state', 'eq', 'on') | list | length }}
+      automation_status: >
+        {% set autos = [
+          'automation.advanced_heating_control_living_room',
+          'automation.advanced_heating_control_piesek',
+          'automation.advanced_heating_control_bedroom',
+          'automation.advanced_heating_control_livingroom_ac',
+          'automation.advanced_heating_control_bedroom_ac'
+        ] %}
+        {% set ns = namespace(status={}) %}
+        {% for auto in autos %}
+          {% set ns.status = dict(ns.status, **{auto: states(auto)}) %}
+        {% endfor %}
+        {{ ns.status }}
+      last_triggered: >
+        {% set last = namespace(time='never') %}
+        {% for auto in states.automation | selectattr('entity_id', 'search', 'advanced_heating_control') %}
+          {% set triggered = state_attr(auto.entity_id, 'last_triggered') %}
+          {% if triggered and (last.time == 'never' or triggered > last.time) %}
+            {% set last.time = triggered %}
+          {% endif %}
+        {% endfor %}
+        {{ last.time }}
+
+# ──────────────────────────────────────────────────────────────
+# Watchdog Status
+# ──────────────────────────────────────────────────────────────
+- sensor:
+    name: "Heating Watchdog Status"
+    unique_id: "heating_watchdog_status_sensor"
+    state: >
+      {% set watchdog_auto = states('automation.watchdog___wthermostat') %}
+      {% if watchdog_auto == 'on' %}ACTIVE
+      {% elif watchdog_auto == 'off' %}DISABLED
+      {% else %}UNKNOWN{% endif %}
+    attributes:
+      wthermostat_watchdog: "{{ states('automation.watchdog___wthermostat') }}"
+      wthermostat_watchdog_last_triggered: "{{ state_attr('automation.watchdog___wthermostat', 'last_triggered') }}"
+      wthermostat_state: "{{ states('climate.wthermostat') }}"
+      wthermostat_available: "{{ states('climate.wthermostat') != 'unavailable' }}"
+      sync_automation: "{{ states('automation.boiler_control__thermostat_synchronization') }}"
+      sync_last_triggered: "{{ state_attr('automation.boiler_control__thermostat_synchronization', 'last_triggered') }}"
+
+# ──────────────────────────────────────────────────────────────
+# Heating Demand Debug
+# ──────────────────────────────────────────────────────────────
+- binary_sensor:
+    name: "Heating Demand Debug"
+    unique_id: "heating_demand_debug_binary"
+    state: >
+      {{ states('binary_sensor.heating_demand') }}
+    attributes:
+      heating_demand_raw: "{{ states('binary_sensor.heating_demand') }}"
+      bt_heating_count: >
+        {% set count = states.climate
+           | selectattr('entity_id', 'search', '_better_thermostat')
+           | selectattr('attributes.hvac_action', 'eq', 'heating')
+           | list | length %}
+        {{ count }}
+      bt_heating_list: >
+        {% set list = states.climate
+           | selectattr('entity_id', 'search', '_better_thermostat')
+           | selectattr('attributes.hvac_action', 'eq', 'heating')
+           | map(attribute='entity_id') | list %}
+        {{ list }}
+      outdoor_temperature: "{{ states('sensor.openweathermap_temperature') | float(0) | round(1) }}"
+      season_mode: >
+        {% if states('input_boolean.winter_mode') == 'on' %}'winter'
+        {% elif states('input_boolean.pre_winter_mode') == 'on' %}'pre_winter'
+        {% else %}'off_season'{% endif %}
+
+# ──────────────────────────────────────────────────────────────
+# AC Power Manager Debug
+# ──────────────────────────────────────────────────────────────
+- sensor:
+    name: "AC Power Manager Debug"
+    unique_id: "ac_power_manager_debug_sensor"
+    state: >
+      {% set auto = states('automation.enhanced_smart_control___ac_power_manager_predictive_standby_control_v2') %}
+      {% if auto == 'on' %}ACTIVE
+      {% elif auto == 'off' %}DISABLED
+      {% else %}UNKNOWN{% endif %}
+    attributes:
+      automation_state: "{{ states('automation.enhanced_smart_control___ac_power_manager_predictive_standby_control_v2') }}"
+      automation_last_triggered: "{{ state_attr('automation.enhanced_smart_control___ac_power_manager_predictive_standby_control_v2', 'last_triggered') }}"
+      fuse_power: "{{ states('sensor.fuse_air_conditioner_power') | float(0) | round(2) }}"
+      fuse_voltage: "{{ states('sensor.fuse_air_conditioner_voltage') | float(0) | round(1) }}"
+      ac_economical: "{{ states('binary_sensor.ac_heating_economical') }}"
+      ac_economical_percentage: "{{ states('sensor.ac_heating_economical_percentage') | float(0) | round(1) }}"
+      expected_fuse_state: >
+        {% if states('binary_sensor.ac_heating_economical') == 'on' %}'should_be_on'
+        {% else %}'should_be_off'{% endif %}
+      actual_fuse_state: >
+        {% set power = states('sensor.fuse_air_conditioner_power') | float(0) %}
+        {% set voltage = states('sensor.fuse_air_conditioner_voltage') | float(0) %}
+        {% if voltage < 200 %}'no_power'
+        {% elif power > 5 %}'on'
+        {% elif power > 0 %}'standby'
+        {% else %}'off'{% endif %}
+      mismatch_detected: >
+        {% set expected = 'should_be_on' if states('binary_sensor.ac_heating_economical') == 'on' else 'should_be_off' %}
+        {% set power = states('sensor.fuse_air_conditioner_power') | float(0) %}
+        {% set voltage = states('sensor.fuse_air_conditioner_voltage') | float(0) %}
+        {% set actual = 'no_power' if voltage < 200 else ('on' if power > 5 else ('standby' if power > 0 else 'off')) %}
+        {% if expected == 'should_be_on' and actual in ['off', 'no_power'] %}true
+        {% elif expected == 'should_be_off' and actual in ['on', 'standby'] %}true
+        {% else %}false{% endif %}
+
+# ──────────────────────────────────────────────────────────────
+# Seasonal Modes Debug
+# ──────────────────────────────────────────────────────────────
+- sensor:
+    name: "Seasonal Modes Debug"
+    unique_id: "seasonal_modes_debug_sensor"
+    state: >
+      {% if states('input_boolean.winter_mode') == 'on' %}WINTER
+      {% elif states('input_boolean.pre_winter_mode') == 'on' %}PRE_WINTER
+      {% elif states('input_boolean.mode_long_absence_mode') == 'on' %}ABSENCE
+      {% else %}NORMAL{% endif %}
+    attributes:
+      winter_mode: "{{ states('input_boolean.winter_mode') }}"
+      pre_winter_mode: "{{ states('input_boolean.pre_winter_mode') }}"
+      long_absence_mode: "{{ states('input_boolean.mode_long_absence_mode') }}"
+      sleeping_guest_livingroom: "{{ states('input_boolean.sleeping_guest_livingroom') }}"
+      active_modes: >
+        {% set modes = [] %}
+        {% if states('input_boolean.winter_mode') == 'on' %}
+          {% set modes = modes + ['winter'] %}
+        {% endif %}
+        {% if states('input_boolean.pre_winter_mode') == 'on' %}
+          {% set modes = modes + ['pre_winter'] %}
+        {% endif %}
+        {% if states('input_boolean.mode_long_absence_mode') == 'on' %}
+          {% set modes = modes + ['absence'] %}
+        {% endif %}
+        {{ modes if modes else ['normal'] }}

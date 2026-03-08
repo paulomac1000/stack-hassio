@@ -1,0 +1,141 @@
+{
+  "Backup": {
+    "Name": "HomeAssistant-Daily",
+    "Description": "Home Assistant configuration and database backup",
+    "Tags": ["critical", "daily"],
+
+    "TargetURL": "file:///backups/homeassistant",
+
+    "Sources": [
+      "/staging/home-assistant_v2.db",
+      "/source/homeassistant/"
+    ],
+
+    "Settings": [
+      {
+        "Name": "encryption-module",
+        "Value": ""
+      },
+      {
+        "Name": "compression-module",
+        "Value": "zip"
+      },
+      {
+        "Name": "dblock-size",
+        "Value": "50mb"
+      },
+      {
+        "Name": "blocksize",
+        "Value": "50kb"
+      },
+      {
+        "Name": "zip-compression-level",
+        "Value": "1"
+      },
+      {
+        "Name": "concurrency-max-threads",
+        "Value": "1"
+      },
+      {
+        "Name": "concurrency-block-hashers",
+        "Value": "1"
+      },
+      {
+        "Name": "concurrency-compressors",
+        "Value": "1"
+      },
+      {
+        "Name": "asynchronous-upload",
+        "Value": "false"
+      },
+      {
+        "Name": "asynchronous-concurrent-upload-limit",
+        "Value": "1"
+      },
+      {
+        "Name": "throttle-upload",
+        "Value": "2097152"
+      },
+      {
+        "Name": "block-hash-algorithm",
+        "Value": "XXHash64"
+      },
+      {
+        "Name": "snapshot-policy",
+        "Value": "off"
+      },
+      {
+        "Name": "no-backend-verification",
+        "Value": "true"
+      },
+      {
+        "Name": "run-script-before",
+        "Value": "/config/scripts/pre-backup.sh"
+      },
+      {
+        "Name": "run-script-after",
+        "Value": "/config/scripts/post-backup.sh"
+      },
+      {
+        "Name": "keep-versions",
+        "Value": "7"
+      },
+      {
+        "Name": "retention-policy",
+        "Value": "1W:1D,4W:1W,12M:1M"
+      }
+    ],
+
+    "Filters": [
+      {
+        "Order": 0,
+        "Include": false,
+        "Expression": "*/home-assistant_v2.db*"
+      },
+      {
+        "Order": 1,
+        "Include": false,
+        "Expression": "*/deps/"
+      },
+      {
+        "Order": 2,
+        "Include": false,
+        "Expression": "*/tts/"
+      },
+      {
+        "Order": 3,
+        "Include": false,
+        "Expression": "*/__pycache__/"
+      },
+      {
+        "Order": 4,
+        "Include": false,
+        "Expression": "*/.cache/"
+      },
+      {
+        "Order": 5,
+        "Include": false,
+        "Expression": "*.log"
+      },
+      {
+        "Order": 6,
+        "Include": false,
+        "Expression": "*.log.*"
+      },
+      {
+        "Order": 7,
+        "Include": false,
+        "Expression": "*/.git/"
+      }
+    ]
+  },
+
+  "Schedule": {
+    "ID": 1,
+    "Tags": ["critical", "daily"],
+    "Time": "2024-01-01T03:00:00",
+    "Repeat": "1D",
+    "AllowedDays": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
+    "Rule": "0 3 * * *"
+  }
+}

@@ -1,0 +1,21 @@
+vacuum_stat:
+  color_type: card
+  size: 14px
+  show_icon: true
+  show_name: true
+  show_state: true
+  state:
+    - value: "unknown"
+      color: gray
+  styles:
+    card:
+      - border-radius: 12px
+      - padding: 10px
+      - background-color: "#2e3a4e"
+      - box-shadow: "2px 2px 6px rgba(0,0,0,0.3)"
+    name:
+      - color: white
+      - font-weight: bold
+    state:
+      - color: white
+      - font-size: 12px

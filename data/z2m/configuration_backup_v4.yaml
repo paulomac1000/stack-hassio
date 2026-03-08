@@ -1,0 +1,37 @@
+devices:
+  - devices.yaml
+groups:
+  - groups.yaml
+homeassistant:
+  enabled: true
+mqtt:
+  base_topic: zigbee2mqtt
+  server: mqtt://mosquitto:1883
+serial:
+  adapter: zstack
+  port: /dev/serial/by-id/usb-1a86_USB_Single_Serial_550D015171-if00
+frontend:
+  enabled: true
+advanced:
+  log_level: debug
+  pan_id: 6754
+  channel: 11
+  network_key:
+    - 10
+    - 3
+    - 5
+    - 7
+    - 9
+    - 11
+    - 15
+    - 13
+    - 0
+    - 2
+    - 4
+    - 6
+    - 8
+    - 1
+    - 12
+    - 13
+device_options: {}
+version: 4

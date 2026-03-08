@@ -1,0 +1,20 @@
+extends: default
+
+rules:
+  line-length: disable
+  document-start: disable
+  indentation: disable
+  comments: disable
+  truthy: disable
+  braces: disable
+  brackets: disable
+  colons: disable
+  empty-lines: disable
+  hyphens: disable
+  key-duplicates: disable
+  key-ordering: disable
+  new-line-at-end-of-file: disable
+  new-lines: disable
+  octal-values: disable
+  quoted-strings: disable
+  trailing-spaces: disable

@@ -1,0 +1,98 @@
+{% macro heating_force_logic(temp_sensor, target_sensor, occupancy_type, occupancy_sensor) %}
+  {%- set is_winter = is_state('input_boolean.winter_mode', 'on') %}
+  {%- set is_pre_winter = is_state('input_boolean.pre_winter_mode', 'on') %}
+  {%- set economical_pct = states('sensor.ac_heating_economical_percentage') | float(101) %}
+  {%- set temp_current = states(temp_sensor) | float(21) %}
+  {%- set temp_target = states(target_sensor) | float(21) %}
+  {%- set is_cheap_morning = is_state('binary_sensor.energy_is_cheapest_1h_morning', 'on') %}
+  {%- set is_cheap_hour = is_state('sensor.energy_price_state', 'cheap') %}
+  {%- set is_cheapest_5h = is_state('binary_sensor.energy_is_cheapest_5h', 'on') %}
+  {%- set delta = temp_target - temp_current %}
+  {%- set is_cold_inside = delta >= 0.8 %}
+  {%- set needs_heating = delta > 0 %}
+
+  {# Room-specific occupancy logic #}
+  {%- if occupancy_type == 'sleep_mode' %}
+    {%- set is_occupied = is_state(occupancy_sensor, 'Sen') or
+                          is_state('binary_sensor.motion_sensor_bedroom_extended', 'on') %}
+    {%- set is_guest_sleeping = false %}
+  {%- elif occupancy_type == 'guest_mode' %}
+    {%- set is_occupied = is_state(occupancy_sensor, 'on') or
+                          is_state('binary_sensor.motion_sensor_livingroom_extended', 'on') %}
+    {%- set is_guest_sleeping = is_state(occupancy_sensor, 'on') %}
+  {%- else %}
+    {%- set is_occupied = is_state(occupancy_sensor, 'on') %}
+    {%- set is_guest_sleeping = false %}
+  {%- endif %}
+
+  {%- if is_winter %}
+      {# WINTER MODE (Aggressive heating for radiators) #}
+      {{
+         (is_cold_inside and economical_pct <= 120 and not is_guest_sleeping) or
+         (needs_heating and not is_cold_inside and is_occupied and economical_pct <= 100) or
+         (is_cheap_morning and economical_pct < 140 and not is_guest_sleeping)
+      }}
+  {%- elif is_pre_winter %}
+      {# PRE-WINTER MODE (Economical AC heating) #}
+      {{
+         (is_cold_inside and economical_pct <= 120 and not is_guest_sleeping) or
+         (is_cheap_morning and economical_pct < 140 and not is_guest_sleeping) or
+         (is_occupied and (is_cheap_hour or economical_pct < 80)) or
+         (is_occupied and (is_cheapest_5h and economical_pct < 110))
+      }}
+  {%- else %}
+      False
+  {%- endif %}
+{% endmacro %}
+
+{% macro heating_calibration_logic(temp_base_input, room) %}
+  {%- set temp_base = states(temp_base_input) | float(21) %}
+  {%- set price = states('sensor.pstryk_buy_price') | float(10) %}
+  {%- set economical_pct = states('sensor.ac_heating_economical_percentage') | float(101) %}
+  {%- set is_cheap_morning = is_state('binary_sensor.energy_is_cheapest_1h_morning', 'on') %}
+  {%- set is_cheap_now = is_state('sensor.energy_price_state', 'cheap') %}
+  {%- set is_cheapest_5h = is_state('binary_sensor.energy_is_cheapest_5h', 'on') %}
+  {%- set current_hour = now().hour %}
+
+  {# Room-specific logic #}
+  {%- if room == 'livingroom' %}
+    {%- set is_guest_sleeping = is_state('input_boolean.sleeping_guest_livingroom', 'on') %}
+    {%- set cheap_hours_str = states('sensor.energy_cheap_today') %}
+    {%- set target_hours = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00'] %}
+    {%- set has_daytime_cheap = false %}
+    {%- if cheap_hours_str not in ['unknown', 'unavailable', none] %}
+      {%- set cheap_list = cheap_hours_str.split(',') | map('trim') | list %}
+      {%- if (cheap_list | select('in', target_hours) | list | length) > 0 %}
+        {%- set has_daytime_cheap = true %}
+      {%- endif %}
+    {%- endif %}
+
+    {# Livingroom boost logic with max temp limit #}
+    {%- set max_temp = 24 %}
+    {% if not is_guest_sleeping and (price <= 0 or (is_cheap_morning and economical_pct < 100 and not has_daytime_cheap)) %}
+      {{ [temp_base + 5, max_temp] | min }}
+    {% elif not is_guest_sleeping and (is_cheap_now and 1 <= current_hour < 6) %}
+      {{ [temp_base + 2, max_temp] | min }}
+    {% elif is_cheap_now or economical_pct < 80 %}
+      {{ temp_base + 1 }}
+    {% elif is_cheapest_5h and economical_pct < 110 %}
+      {{ temp_base + 0.5 }}
+    {% else %}
+      {{ temp_base }}
+    {% endif %}
+
+  {%- elif room == 'bedroom' %}
+    {# Bedroom boost logic (simpler, comfort-focused) #}
+    {% if price <= 0 %}
+      {{ temp_base + 2 }}
+    {% elif is_cheap_morning and economical_pct < 140 %}
+      {{ temp_base + 1.5 }}
+    {% elif is_cheap_now or economical_pct < 80 %}
+      {{ temp_base + 1 }}
+    {% elif is_cheapest_5h and economical_pct < 110 %}
+      {{ temp_base + 0.5 }}
+    {% else %}
+      {{ temp_base }}
+    {% endif %}
+  {%- endif %}
+{% endmacro %}

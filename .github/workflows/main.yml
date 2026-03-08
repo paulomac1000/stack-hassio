@@ -1,0 +1,140 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ============================================================
+  # JOB 1: Lint — YAML, Docker Compose, Python
+  # ============================================================
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install lint dependencies
+        run: pip install yamllint
+
+      - name: YAML lint — HA config files
+        run: |
+          yamllint -c .yamllint.yml \
+            data/hassio/configuration.yaml \
+            data/hassio/scenes.yaml \
+            data/hassio/customize.yaml \
+            data/hassio/go2rtc.yaml \
+            data/z2m/configuration.yaml \
+            data/z2m/devices.yaml \
+            data/z2m/groups.yaml
+
+      - name: Docker Compose validation
+        run: docker compose config --quiet
+
+  # ============================================================
+  # JOB 2: Home Assistant config check
+  # ============================================================
+  ha-config-check:
+    name: HA Config Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Prepare secrets stub for CI
+        # Use example file as secrets — all values are placeholders but syntax is valid
+        run: cp data/hassio/secrets.example.yaml data/hassio/secrets.yaml
+
+      - name: Stub Google service account JSON
+        # HA requires this file to exist (referenced via !include in configuration.yaml)
+        run: |
+          echo '{"type":"service_account","project_id":"ci-stub","private_key_id":"ci","private_key":"","client_email":"ci@ci-stub.iam.gserviceaccount.com","client_id":"","auth_uri":"","token_uri":"","auth_provider_x509_cert_url":"","client_x509_cert_url":""}' \
+            > data/hassio/hassio-382116-214eb11e0073.json
+
+      - name: Run HA config check
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}/data/hassio:/config \
+            ghcr.io/home-assistant/home-assistant:stable \
+            python3 -m homeassistant --script check_config -c /config
+
+  # ============================================================
+  # JOB 3: Unit tests — yolov5-app
+  # ============================================================
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+
+      - name: Install test dependencies
+        run: |
+          pip install pytest pytest-cov flask paho-mqtt psutil jinja2
+
+      - name: Run yolov5 unit tests
+        run: pytest yolov5-app/test_app.py -v --tb=short --cov=yolov5-app --cov-report=term-missing
+
+      - name: Run HA Jinja2 template tests
+        run: pytest tests/test_heating_macros.py -v --tb=short
+
+  # ============================================================
+  # JOB 4: Integration tests (only on push to main, not PRs)
+  # Requires Docker services to start up — slower, run less frequently
+  # ============================================================
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    needs: [lint, unit-tests]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create .env for CI
+        run: |
+          cat > .env << 'EOF'
+          TUNNEL_TOKEN=ci-stub-token
+          MQTT_HOST=mosquitto
+          MQTT_PORT=1883
+          MQTT_USERNAME=
+          MQTT_PASSWORD=
+          GO2RTC_PASSWORD=ci-stub-password
+          HA_LONG_LIVED_TOKEN=ci-stub-token
+          TZ=Europe/Warsaw
+          EOF
+
+      - name: Start Mosquitto
+        run: docker compose up -d mosquitto
+
+      - name: Wait for Mosquitto to be healthy
+        run: |
+          for i in $(seq 1 30); do
+            docker compose ps mosquitto | grep -q "healthy" && break
+            echo "Waiting for mosquitto... ($i/30)"
+            sleep 3
+          done
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install integration test dependencies
+        run: pip install pytest paho-mqtt requests
+
+      - name: Run integration tests
+        run: pytest tests/test_integration.py -v --tb=short
+
+      - name: Stop services
+        if: always()
+        run: docker compose down

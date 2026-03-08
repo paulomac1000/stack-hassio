@@ -1,0 +1,146 @@
+blueprint:
+  name: Persistent entity state notification
+  description: Creates a persitent notification when an entity is in defined state.
+    Notification will disapear when entity leave this state.
+  source_url: https://github.com/panhans/homeassistant/blob/main/blueprints/automation/panhans/entity_state_persistent_notification.yaml
+  domain: automation
+  input:
+    sensor_entity:
+      name: Entities
+      description: Entities which trigger the notification.
+      selector:
+        entity:
+          multiple: true
+    active_state:
+      name: Notification state
+      description: State whicht triggers notification
+      default: 'on'
+    for_time_m:
+      name: For Time Minutes
+      description: Duration the sensor must be in state
+      default: 0
+      selector:
+        number:
+          min: 0.0
+          max: 59.0
+          step: 1.0
+          mode: slider
+    notify_device:
+      name: Device to notify
+      description: Device which gets a notification.
+      default:
+      selector:
+        device:
+          integration: mobile_app
+          multiple: false
+    notify_group:
+      name: Notification Group
+      description: The name of the notification group to call. ('notify' for all devices)
+      default: ''
+    title:
+      name: Title
+      description: Notification title
+      default: '{{ trigger.from_state.attributes.friendly_name }} is open'
+    message:
+      name: Message
+      description: Notification message
+      default: 'Keep in mind: {{ trigger.from_state.attributes.friendly_name }} is
+        open'
+    status_bar_icon:
+      name: Status bar icon
+      description: Sets the status bar icon. (Android only)
+      default: mdi:home-assistant
+      selector:
+        icon:
+          placeholder: mdi:home-assistant
+    ha_notification:
+      name: Persistent HomeAssistant Notification
+      description: Creates an notification in your home assistant frontend.
+      default: false
+      selector:
+        boolean: {}
+    persistent_notification:
+      name: Persistent Notification
+      description: Would you like a persistent or a closable notification?
+      default: true
+      selector:
+        boolean: {}
+variables:
+  active_state: !input active_state
+  message: !input message
+  title: !input title
+  sensor_entity: !input sensor_entity
+  group_target: !input notify_group
+  ha_notification: !input ha_notification
+  notify_device: !input notify_device
+trigger_variables:
+  for_time_m: !input for_time_m
+  for_time_m_t: '{{ for_time_m | default(0) | int  }}'
+trigger:
+- platform: state
+  entity_id: !input sensor_entity
+  to: !input active_state
+  for:
+    hours: 0
+    minutes: '{{ for_time_m_t }}'
+    seconds: 0
+- platform: state
+  entity_id: !input sensor_entity
+  from: !input active_state
+condition: []
+action:
+- if:
+  - condition: template
+    value_template: '{{ trigger.to_state.state == active_state }}'
+  then:
+  - if:
+    - condition: template
+      value_template: '{{ notify_device != none }}'
+    then:
+    - service: notify.mobile_app_{{ device_attr(notify_device, "name") | slugify }}
+      data:
+        title: '{{ title }}'
+        message: '{{ message }}'
+        data:
+          ttl: 0
+          priority: high
+          notification_icon: !input status_bar_icon
+          tag: pesn-{{ trigger.entity_id }}
+          persistent: !input persistent_notification
+          sticky: !input persistent_notification
+  - if:
+    - condition: template
+      value_template: '{{ group_target is defined and group_target != '''' }}'
+    then:
+    - service: notify.{{ group_target }}
+      data:
+        title: '{{ title }}'
+        message: '{{ message }}'
+        data:
+          ttl: 0
+          priority: high
+          notification_icon: !input status_bar_icon
+          tag: pesn-{{ trigger.entity_id }}
+          persistent: !input persistent_notification
+          sticky: !input persistent_notification
+  - if:
+    - condition: template
+      value_template: '{{ ha_notification }}'
+    then:
+    - service: persistent_notification.create
+      data:
+        title: '{{ title }}'
+        message: '{{ message }}'
+        notification_id: pesn-{{ trigger.entity_id }}
+  else:
+  - service: notify.notify
+    data:
+      data:
+        tag: pesn-{{ trigger.entity_id }}
+        ttl: 0
+        priority: high
+      message: clear_notification
+  - service: persistent_notification.dismiss
+    data:
+      notification_id: pesn-{{ trigger.entity_id }}
+mode: parallel

@@ -1,0 +1,26 @@
+# Core ML - OLD VERSION for non-AVX CPUs
+# torch and torchvision installed separately in Dockerfile
+
+# YOLOv5 dependencies
+ultralytics>=8.0.0
+opencv-python-headless==4.8.1.78
+pandas==2.0.3
+numpy==1.24.3
+Pillow==10.1.0
+PyYAML==6.0.1
+requests==2.31.0
+scipy==1.10.1
+tqdm==4.66.1
+matplotlib==3.7.3
+seaborn==0.12.2
+
+# API & MQTT
+flask==2.3.3
+waitress==2.1.2
+paho-mqtt==1.6.1
+
+# System monitoring
+psutil==5.9.7
+
+# Git for torch.hub
+gitpython>=3.1.0

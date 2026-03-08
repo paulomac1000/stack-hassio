@@ -1,0 +1,77 @@
+{
+  "Backup": {
+    "Name": "HA-Config-Frequent",
+    "Description": "Home Assistant YAML configs only (lightweight, frequent)",
+    "Tags": ["config", "frequent"],
+
+    "TargetURL": "file:///backups/ha-config",
+
+    "Sources": [
+      "/source/homeassistant/"
+    ],
+
+    "Settings": [
+      {
+        "Name": "encryption-module",
+        "Value": ""
+      },
+      {
+        "Name": "compression-module",
+        "Value": "zip"
+      },
+      {
+        "Name": "zip-compression-level",
+        "Value": "0"
+      },
+      {
+        "Name": "concurrency-max-threads",
+        "Value": "1"
+      },
+      {
+        "Name": "asynchronous-upload",
+        "Value": "false"
+      },
+      {
+        "Name": "keep-versions",
+        "Value": "24"
+      }
+    ],
+
+    "Filters": [
+      {
+        "Order": 0,
+        "Include": true,
+        "Expression": "*.yaml"
+      },
+      {
+        "Order": 1,
+        "Include": true,
+        "Expression": "*.yml"
+      },
+      {
+        "Order": 2,
+        "Include": true,
+        "Expression": ".storage/core.*"
+      },
+      {
+        "Order": 3,
+        "Include": true,
+        "Expression": "secrets.yaml"
+      },
+      {
+        "Order": 4,
+        "Include": false,
+        "Expression": "*"
+      }
+    ]
+  },
+
+  "Schedule": {
+    "ID": 4,
+    "Tags": ["config", "frequent"],
+    "Time": "2024-01-01T06:00:00",
+    "Repeat": "6h",
+    "AllowedDays": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
+    "Rule": "0 */6 * * *"
+  }
+}

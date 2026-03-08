@@ -1,0 +1,370 @@
+version: '2.4'
+# NOTE: Version 2.4 is strictly required here to support 'cpus' and 'mem_limit'
+# parameters without using Swarm mode. Do not change to '3.x'.
+
+services:
+  # =============================================================================
+  # STEP 1: INFRASTRUCTURE BASE
+  # Services here start first. They are lightweight and essential for communication.
+  # =============================================================================
+
+  mosquitto:
+    container_name: hass-mosquitto
+    image: eclipse-mosquitto:latest
+    ports:
+       - 1883:1883
+       - 9001:9001
+    volumes:
+      - ./data/mqtt/config:/mosquitto/config
+      - ./data/mqtt/data:/mosquitto/data
+      - ./data/mqtt/log:/mosquitto/log
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "nc", "-z", "127.0.0.1", "1883"]
+      interval: 30s
+      timeout: 30s
+      retries: 5
+      start_period: 60s
+
+  filebrowser:
+    container_name: hass_filebrowser
+    image: filebrowser/filebrowser:latest
+    volumes:
+      - /var/apps/:/srv
+      - ./data/filebrowser/database.db:/database/filebrowser.db
+      - ./data/filebrowser/.filebrowser.json:/.filebrowser.json
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Warsaw
+    ports:
+      - 8091:80
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 60s
+      timeout: 20s
+      retries: 3
+      start_period: 60s
+
+  # =============================================================================
+  # STEP 2: HEAVY AI ENGINES (Sequential Startup)
+  # We chain these services using 'depends_on' to prevent CPU saturation.
+  # =============================================================================
+
+  vosk:
+    container_name: hass-vosk
+    image: rhasspy/wyoming-vosk:latest
+    command: --data-dir /data --uri tcp://0.0.0.0:10300 --language pl --debug
+    environment:
+      - TZ=Europe/Warsaw
+    volumes:
+      - ./data/vosk/data:/data
+      - ./data/vosk/sentences:/share/vosk/sentences
+    ports:
+      - 10300:10300
+    restart: unless-stopped
+    depends_on:
+      mosquitto:
+        condition: service_healthy
+    healthcheck:
+      # Vosk needs to load the language model into RAM. On weak CPUs, this takes time.
+      test: ["CMD", "python3", "-c", "import socket; s = socket.socket(socket.AF_INET, socket.SOCK_STREAM); s.connect(('127.0.0.1', 10300)); s.close()"]
+      interval: 60s
+      timeout: 30s
+      retries: 10
+      start_period: 300s # 5 minutes grace period for model loading
+
+  # =============================================================================
+  # STEP 3: AUDIO WAKE WORD
+  # =============================================================================
+
+  porcupine1:
+    container_name: hass-porcupine1
+    image: rhasspy/wyoming-porcupine1:latest
+    restart: unless-stopped
+    command: --uri tcp://0.0.0.0:10400 --debug
+    ports:
+      - 10400:10400
+    # ARTIFICIAL DEPENDENCY: Waits for Vosk to finish loading to save CPU.
+    depends_on:
+      vosk:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import socket; s = socket.socket(socket.AF_INET, socket.SOCK_STREAM); s.connect(('127.0.0.1', 10400)); s.close()"]
+      interval: 45s
+      timeout: 20s
+      retries: 5
+      start_period: 120s
+
+  # =============================================================================
+  # STEP 4: HARDWARE INTERFACE (Zigbee)
+  # =============================================================================
+
+  zigbee2mqtt:
+    container_name: hass-zigbee2mqtt
+    image: koenkk/zigbee2mqtt:latest
+    ports:
+       - 8081:8080
+    volumes:
+      - ./data/z2m:/app/data/
+      - /run/udev:/run/udev:ro
+    devices:
+      - /dev/serial/by-id/usb-1a86_USB_Single_Serial_550D015171-if00:/dev/serial/by-id/usb-1a86_USB_Single_Serial_550D015171-if00
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/Warsaw
+      # Zigbee network encryption key — kept out of z2m/configuration.yaml
+      - ZIGBEE2MQTT_CONFIG_ADVANCED_NETWORK_KEY=${Z2M_NETWORK_KEY}
+    # ARTIFICIAL DEPENDENCY: Waits for Porcupine to finish.
+    depends_on:
+      porcupine1:
+        condition: service_healthy
+    healthcheck:
+      # Using wget because curl might be missing in this image.
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:8080/"]
+      interval: 60s
+      timeout: 45s
+      retries: 5
+      start_period: 300s # Compilation of 'herdsman' library takes time on ARM CPUs
+
+  # =============================================================================
+  # STEP 5: SATELLITE & OBJECT DETECTION (YOLO)
+  # =============================================================================
+
+  satellite:
+    container_name: hass-satellite
+    build:
+      context: ./data/satellite
+    restart: unless-stopped
+    devices:
+      - /dev/snd:/dev/snd
+    group_add:
+      - audio
+    volumes:
+      - ./data/satellite/sounds:/sounds:ro
+    command:
+      - --name
+      - 'salon'
+      - --uri
+      - 'tcp://0.0.0.0:10700'
+      - --mic-command
+      - 'arecord -D plughw:0,0 -r 16000 -c 1 -f S16_LE -t raw'
+      - --snd-command
+      - 'aplay -D plughw:0,0 -r 22050 -c 1 -f S16_LE -t raw'
+      - --wake-uri
+      - 'tcp://porcupine1:10400'
+      - --wake-word-name
+      - 'jarvis'
+      - --debug
+    ports:
+      - 10700:10700
+    depends_on:
+      zigbee2mqtt:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import socket; s = socket.socket(socket.AF_INET, socket.SOCK_STREAM); s.connect(('127.0.0.1', 10700)); s.close()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  yolov5-service:
+    container_name: hass-yolov5
+    build:
+      context: ./yolov5-app
+    restart: unless-stopped
+
+    # RESOURCE LIMITS
+    mem_limit: 1500M
+    memswap_limit: 2000M
+    cpus: 1.5
+
+    # VOLUMES
+    volumes:
+      - ./data/yolo:/data:ro
+      - yolov5_cache:/root/.cache/torch
+
+    ports:
+      - "8071:8071"
+
+    environment:
+      CPU_THREADS: "4"
+      MEMORY_MODE: "aggressive"
+      MODEL_SIZE: "nano"
+      USE_CUSTOM_MODEL: "false"
+      CUSTOM_MODEL_PATH: "/data/best.pt"
+      IMAGE_SIZE: "416"
+      CONFIDENCE_THRESHOLD: "0.15"
+      IOU_THRESHOLD: "0.45"
+      MAX_DETECTIONS: "50"
+      ENABLE_MQTT: "true"
+      MQTT_BROKER: ${MQTT_HOST}
+      MQTT_PORT: ${MQTT_PORT:-1883}
+      MQTT_USERNAME: ${MQTT_USERNAME:-}
+      MQTT_PASSWORD: ${MQTT_PASSWORD:-}
+      MQTT_CLIENT_ID: "yolov5-detector"
+      MQTT_TOPIC_SUBSCRIBE: "yolov5/detect"
+      MQTT_TOPIC_PUBLISH: "yolov5/results"
+      MQTT_QOS: "1"
+      ENABLE_API: "true"
+      API_HOST: "0.0.0.0"
+      API_PORT: "8071"
+      LOG_LEVEL: "INFO"
+      LOG_TIMING: "true"
+      LOG_MEMORY: "true"
+      REQUEST_TIMEOUT: "15"
+      USE_HALF_PRECISION: "false"
+      TZ: "Europe/Warsaw"
+
+    # Waits for Zigbee to be ready to avoid I/O bottlenecks during model download.
+    depends_on:
+      zigbee2mqtt:
+        condition: service_healthy
+
+    healthcheck:
+      test: ["CMD", "python", "/app/healthcheck.py"]
+      interval: 60s
+      timeout: 30s
+      retries: 3
+      start_period: 180s
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "5"
+
+  # =============================================================================
+  # STEP 6: CORE SYSTEM (Home Assistant)
+  # =============================================================================
+
+  homeassistant:
+    container_name: hassio
+    image: "ghcr.io/home-assistant/home-assistant:stable"
+    network_mode: host
+    volumes:
+      - ./data/hassio/:/config
+      - ./data/hassio/media:/media
+      - /etc/localtime:/etc/localtime:ro
+      - /var/run/dbus/:/var/run/dbus/
+    environment:
+      # go2rtc reads ${GO2RTC_PASSWORD} from its environment when loading go2rtc.yaml
+      GO2RTC_PASSWORD: ${GO2RTC_PASSWORD}
+    privileged: true
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8123"]
+      interval: 60s
+      timeout: 120s
+      retries: 10
+      start_period: 600s # Gives HA 10 minutes to perform DB migrations and startup
+    depends_on:
+      mosquitto:
+        condition: service_healthy
+      vosk:
+        condition: service_healthy
+      porcupine1:
+        condition: service_healthy
+      satellite:
+        condition: service_healthy
+      zigbee2mqtt:
+        condition: service_healthy
+      # CRITICAL EXCEPTION:
+      # HA will NOT wait for YOLO to be "healthy" (download finished).
+      # It will start as soon as YOLO container is created ("service_started").
+      yolov5-service:
+        condition: service_started
+
+  # =============================================================================
+  # STEP 7: ADD-ONS & BACKUP
+  # =============================================================================
+
+  cloudflared:
+    container_name: hass-cloudflared
+    image: cloudflare/cloudflared:latest
+    environment:
+      - TUNNEL_TOKEN=${TUNNEL_TOKEN}
+    restart: unless-stopped
+    command: tunnel run hassio
+    depends_on:
+      homeassistant:
+        condition: service_healthy
+
+  #duplicati:
+  #  container_name: hass-duplicati
+  #  image: lscr.io/linuxserver/duplicati:latest
+  #  environment:
+  #    - PUID=1000
+  #    - PGID=1000
+  #    - TZ=Europe/Warsaw
+  #    - MONO_GC_PARAMS=max-heap-size=192m,soft-heap-limit=128m
+  #    - CLI_ARGS=--webservice-allowed-hostnames=*
+  #    - HA_URL=http://homeassistant:8123
+  #    - HA_TOKEN=${HA_LONG_LIVED_TOKEN}
+  #    - MIN_FREE_SPACE_MB=2048
+  #    - MAX_LOAD_AVERAGE=1.5
+  #    - MIN_FREE_MEMORY_MB=256
+
+    # HARDWARE LIMITS (Supported in Compose v2.4)
+    # These settings are crucial to prevent Duplicati from freezing the system during backup.
+  #  cpus: 0.25      # Limits usage to 25% of one CPU core.
+  #  mem_limit: 384m # Hard RAM limit.
+
+    # DISK I/O PRIORITY
+  #  blkio_config:
+  #    weight: 10    # Lowest possible disk priority (10-1000).
+
+  #  entrypoint: /custom-scripts/entrypoint.sh
+
+  #  volumes:
+  #    - ./data/duplicati/scripts:/custom-scripts:ro
+  #    - ./data/duplicati/config:/config
+  #    - ./data/duplicati/staging:/staging
+  #    - ./data/hassio:/source/homeassistant:ro
+  #    - ./data/z2m:/source/zigbee2mqtt:ro
+  #    - ./data/mqtt:/source/mosquitto:ro
+  #    - ./data/filebrowser:/source/filebrowser:ro
+  #    - /media/hdd:/backups
+
+  #  ports:
+  #    - 8200:8200
+
+  #  restart: unless-stopped
+
+  #  healthcheck:
+  #    test: ["CMD", "curl", "-sf", "http://127.0.0.1:8200/api/v1/systeminfo"]
+  #    interval: 120s
+  #    timeout: 30s
+  #    retries: 3
+  #    start_period: 600s
+
+  #  depends_on:
+  #    homeassistant:
+  #      condition: service_healthy
+
+  #  logging:
+  #    driver: "json-file"
+  #    options:
+  #      max-size: "10m"
+  #      max-file: "3"
+
+  # =============================================================================
+  # STEP 8: TEST RUNNER (Optional/Auto-run)
+  # =============================================================================
+
+  unit-tests:
+    container_name: hass-unit-tests
+    build:
+      context: .
+      dockerfile: tests/Dockerfile
+    volumes:
+      - .:/app:ro
+    working_dir: /app
+    # Unit tests don't need other services, so no depends_on.
+    # This service will run and exit with code 0 if tests pass.
+    # It allows seeing test results directly in 'docker compose up' logs.
+    command: pytest tests/test_heating_macros.py yolov5-app/test_app.py -v --tb=short -p no:cacheprovider
+
+volumes:
+  yolov5_cache:

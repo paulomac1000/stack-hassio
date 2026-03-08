@@ -1,0 +1,6 @@
+api:
+  password: ${GO2RTC_PASSWORD}
+  username: admin
+rtsp:
+  password: ${GO2RTC_PASSWORD}
+  username: admin

@@ -1,0 +1,73 @@
+{# config/custom_templates/energy.jinja #}
+
+{#
+  Returns a clean list of {"ts": float, "price": float} from Pstryk.
+  Deduplicates, filters out invalid zeros, and sorts by time.
+#}
+{% macro get_pstryk_prices(entity_id='sensor.pstryk_buy_price') %}
+  {% set today = state_attr(entity_id, 'prices_today') or [] %}
+  {% set tomorrow_raw = state_attr(entity_id, 'prices_tomorrow') or [] %}
+
+  {# Validate tomorrow data - check if all prices are zero #}
+  {% set tomorrow_prices = tomorrow_raw | map(attribute='price') | list %}
+  {% set tomorrow_valid = tomorrow_raw | count >= 20 and tomorrow_prices | unique | list != [0.0] %}
+
+  {# Use tomorrow only if valid #}
+  {% set tomorrow = tomorrow_raw if tomorrow_valid else [] %}
+
+  {% set raw_list = today + tomorrow %}
+  {% set ns = namespace(items=[], seen=[]) %}
+  {% for item in raw_list %}
+    {% if item.time is defined and item.price is defined %}
+      {% set ts = as_timestamp(item.time) %}
+      {% if ts not in ns.seen %}
+        {% set ns.seen = ns.seen + [ts] %}
+        {% set ns.items = ns.items + [{'ts': ts, 'price': item.price | float(99.99)}] %}
+      {% endif %}
+    {% endif %}
+  {% endfor %}
+  {{ ns.items | sort(attribute='ts') | to_json }}
+{% endmacro %}
+
+{#
+  Returns all slots starting from NOW (minus 1 min buffer).
+#}
+{% macro get_future_slots(entity_id='sensor.pstryk_buy_price') %}
+  {% set all = get_pstryk_prices(entity_id) | from_json %}
+  {% set now_ts = as_timestamp(now()) %}
+  {% set ns = namespace(res=[]) %}
+  {% for item in all %}
+    {% if item.ts >= (now_ts - 60) %}
+      {% set ns.res = ns.res + [item] %}
+    {% endif %}
+  {% endfor %}
+  {{ ns.res | to_json }}
+{% endmacro %}
+
+{#
+  Finds the start time of the cheapest continuous block of 'hours' duration.
+  Returns: {"ts": timestamp, "avg_price": float} or None
+#}
+{% macro get_cheapest_window(entity_id='sensor.pstryk_buy_price', hours=3) %}
+  {% set slots = get_future_slots(entity_id) | from_json %}
+  {% set count = slots | count %}
+  {% set ns = namespace(best_avg=99.99, best_ts=None) %}
+
+  {# Need at least 'hours' slots to calculate #}
+  {% if count >= hours %}
+    {% for i in range(count - hours + 1) %}
+      {# Calculate average for the slice i to i+hours #}
+      {% set window = slots[i : i+hours] %}
+      {% set sum_p = window | map(attribute='price') | sum %}
+      {% set avg = sum_p / hours %}
+
+      {% if avg < ns.best_avg %}
+        {% set ns.best_avg = avg %}
+        {% set ns.best_ts = window[0].ts %}
+      {% endif %}
+    {% endfor %}
+    {{ {'ts': ns.best_ts, 'avg_price': ns.best_avg} | to_json }}
+  {% else %}
+    {{ none | to_json }}
+  {% endif %}
+{% endmacro %}

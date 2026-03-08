@@ -1,0 +1,45 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+        args: [--unsafe]  # --unsafe required for HA custom tags: !include, !secret, !env_var
+        exclude: '^data/hassio/go2rtc.*\.yaml$'  # go2rtc uses ${VAR} syntax, not valid YAML tags
+      - id: check-json
+      - id: check-merge-conflict
+      - id: detect-private-key
+
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+        exclude: '(\.example\.|secrets\.example)'
+
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.35.1
+    hooks:
+      - id: yamllint
+        args: ['-c', '.yamllint.yml']
+        files: '^data/(hassio|z2m|mqtt)/'
+        exclude: '^data/hassio/(automations|scripts)\.yaml$'  # too large, slow to lint
+
+  # Run unit tests inside Docker — host needs no Python packages installed
+  - repo: local
+    hooks:
+      - id: unit-tests-docker
+        name: Unit tests (Docker)
+        entry: bash scripts/run-tests.sh --unit
+        language: system
+        pass_filenames: false
+        # Only run when relevant source or test files change
+        files: >-
+          (?x)^(
+            yolov5-app/app\.py|
+            yolov5-app/test_app\.py|
+            tests/test_heating_macros\.py|
+            tests/Dockerfile|
+            data/hassio/custom_templates/.*\.jinja
+          )$

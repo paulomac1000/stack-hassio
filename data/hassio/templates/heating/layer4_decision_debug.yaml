@@ -1,0 +1,419 @@
+# ═══════════════════════════════════════════════════════════════
+# WARSTWA 4: DECYZYJNA (Energy & Weather AI Pack)
+# ═══════════════════════════════════════════════════════════════
+
+# ═════════════════════════════════════════════════════════════
+# ENERGY AI-PACK SYSTEM (Trigger-based)
+# ═════════════════════════════════════════════════════════════
+
+# ──────────────────────────────────────────────────────────────
+# Energy AI Pack Cache (trigger-based)
+# ──────────────────────────────────────────────────────────────
+- trigger:
+    - platform: event
+      event_type: energy_ai_pack_updated
+  sensor:
+    - name: "Energy AI Pack Cache"
+      unique_id: energy_ai_pack_cache
+      state: "{{ trigger.event.data.status | default('unknown') }}"
+      icon: mdi:lightning-bolt
+      attributes:
+        generated_at: "{{ trigger.event.data.generated_at | default('') }}"
+        fingerprint: "{{ trigger.event.data.fingerprint | default('') }}"
+        stale: "{{ trigger.event.data.stale | default(false) }}"
+        dashboard_today: "{{ trigger.event.data.dashboard.today | default('Brak danych.') }}"
+        dashboard_night: "{{ trigger.event.data.dashboard.night | default('Brak danych.') }}"
+        dashboard_tomorrow: "{{ trigger.event.data.dashboard.tomorrow | default('Brak danych.') }}"
+        tactical_tts: "{{ trigger.event.data.tactical.tts | default('') }}"
+        strategic_tts: "{{ trigger.event.data.strategic.tts | default('') }}"
+        strategic_pawel: "{{ trigger.event.data.strategic.pawel | default('') }}"
+        strategic_magda: "{{ trigger.event.data.strategic.magda | default('') }}"
+        prices_snapshot: "{{ trigger.event.data.prices_snapshot | default({}) }}"
+
+# ──────────────────────────────────────────────────────────────
+# Energy Dashboard Cache (trigger-based + midnight rotation)
+# ──────────────────────────────────────────────────────────────
+- trigger:
+    - platform: event
+      event_type: energy_ai_pack_updated
+    - platform: event
+      event_type: update_energy_dashboard_daily
+    - platform: time
+      at: "00:00:30"
+      id: midnight_rotation
+  sensor:
+    - name: "Energy Dashboard Cache"
+      unique_id: energy_dashboard_cache
+      state: >
+        {% if trigger.id == 'midnight_rotation' %}
+          rotated
+        {% elif trigger.platform == 'event' %}
+          {{ trigger.event.data.status | default('success') }}
+        {% else %}
+          {{ states('sensor.energy_dashboard_cache') | default('unknown') }}
+        {% endif %}
+      icon: >
+        {% if trigger.id == 'midnight_rotation' %}mdi:flash-auto
+        {% elif trigger.platform == 'event' and trigger.event.data.status == 'success' %}mdi:flash-check
+        {% else %}mdi:flash-alert{% endif %}
+      attributes:
+        last_update: >
+          {% if trigger.id == 'midnight_rotation' %}
+            {{ state_attr('sensor.energy_dashboard_cache', 'last_update') }}
+          {% else %}
+            {{ now().isoformat() }}
+          {% endif %}
+        friendly_status: >
+          {% if trigger.id == 'midnight_rotation' %}Rotacja danych (północ)
+          {% elif trigger.platform == 'event' %}
+            {% if trigger.event.data.status == 'success' %}Dane aktualne
+            {% elif trigger.event.data.status == 'stale' %}Dane nieaktualne
+            {% else %}Błąd generowania{% endif %}
+          {% else %}{{ state_attr('sensor.energy_dashboard_cache', 'friendly_status') | default('Nieznany') }}{% endif %}
+        stale: >
+          {% if trigger.id == 'midnight_rotation' %}
+            {{ state_attr('sensor.energy_dashboard_cache', 'stale') | default(false) }}
+          {% elif trigger.platform == 'event' %}
+            {{ trigger.event.data.stale | default(false) }}
+          {% else %}false{% endif %}
+        summary_today: >
+          {% if trigger.id == 'midnight_rotation' %}
+            {{ state_attr('sensor.energy_dashboard_cache', 'summary_tomorrow') | default('Brak danych') }}
+          {% elif trigger.event is defined %}
+            {% if trigger.event.event_type == 'energy_ai_pack_updated' %}
+              {{ trigger.event.data.dashboard.today | default('Brak danych') }}
+            {% else %}
+              {{ trigger.event.data.summary_today | default('Brak danych') }}
+            {% endif %}
+          {% else %}
+            {{ state_attr('sensor.energy_dashboard_cache', 'summary_today') | default('Brak danych') }}
+          {% endif %}
+        summary_night: >
+          {% if trigger.id == 'midnight_rotation' %}
+            Dane będą dostępne po 13:15
+          {% elif trigger.event is defined %}
+            {% if trigger.event.event_type == 'energy_ai_pack_updated' %}
+              {{ trigger.event.data.dashboard.night | default('Brak danych') }}
+            {% else %}
+              {{ trigger.event.data.summary_night | default('Brak danych') }}
+            {% endif %}
+          {% else %}
+            {{ state_attr('sensor.energy_dashboard_cache', 'summary_night') | default('Brak danych') }}
+          {% endif %}
+        summary_tomorrow: >
+          {% if trigger.id == 'midnight_rotation' %}
+            Dane będą dostępne po 13:15
+          {% elif trigger.event is defined %}
+            {% if trigger.event.event_type == 'energy_ai_pack_updated' %}
+              {{ trigger.event.data.dashboard.tomorrow | default('Brak danych') }}
+            {% else %}
+              {{ trigger.event.data.summary_tomorrow | default('Brak danych') }}
+            {% endif %}
+          {% else %}
+            {{ state_attr('sensor.energy_dashboard_cache', 'summary_tomorrow') | default('Brak danych') }}
+          {% endif %}
+        data_age_hours: >
+          {% set last = state_attr('sensor.energy_dashboard_cache', 'last_update') %}
+          {% if last %}
+            {% set last_ts = as_timestamp(last, 0) %}
+            {% if last_ts > 0 %}
+              {{ ((as_timestamp(now()) - last_ts) / 3600) | round(1) }}
+            {% else %}999{% endif %}
+          {% else %}999{% endif %}
+
+# ──────────────────────────────────────────────────────────────
+# Energy AI Pack Age Minutes
+# ──────────────────────────────────────────────────────────────
+- sensor:
+    - name: "Energy AI Pack Age Minutes"
+      unique_id: energy_ai_pack_age_minutes
+      icon: mdi:timer-sand
+      unit_of_measurement: "min"
+      state: >
+        {% set gen_at = states('input_datetime.energy_ai_pack_generated_at') %}
+        {% if gen_at in ['unknown', 'unavailable', '', 'None'] or gen_at is none %}
+          9999
+        {% else %}
+          {% set gen_ts = as_timestamp(gen_at, 0) %}
+          {% set now_ts = as_timestamp(now()) %}
+          {% if gen_ts > 0 %}
+            {{ ((now_ts - gen_ts) / 60) | round(0) }}
+          {% else %}
+            9999
+          {% endif %}
+        {% endif %}
+
+# ──────────────────────────────────────────────────────────────
+# Energy AI Pack Fingerprint Current
+# ──────────────────────────────────────────────────────────────
+- sensor:
+    - name: "Energy AI Pack Fingerprint Current"
+      unique_id: energy_ai_pack_fingerprint_current
+      icon: mdi:fingerprint
+      state: >
+        {% set pstryk = states.sensor.pstryk_buy_price %}
+        {% if pstryk is none or pstryk.state in ['unknown', 'unavailable'] %}
+          unavailable
+        {% else %}
+          {% set today_raw = state_attr('sensor.pstryk_buy_price', 'prices_today') or [] %}
+          {% set tomorrow_raw = state_attr('sensor.pstryk_buy_price', 'prices_tomorrow') or [] %}
+          {% set current_hour = now().hour %}
+          {% set ns = namespace(today_prices=[]) %}
+          {% for item in today_raw %}
+            {% set h = (item.time | as_timestamp | timestamp_custom('%H')) | int(0) %}
+            {% if h >= current_hour %}
+              {% set ns.today_prices = ns.today_prices + [(item.price | float(0) * 10) | round(0)] %}
+            {% endif %}
+          {% endfor %}
+          {% set tomorrow_prices = tomorrow_raw | map(attribute='price') | list %}
+          {% set tomorrow_valid = tomorrow_raw | count >= 20 and tomorrow_prices | unique | list != [0.0] %}
+          {% set ns2 = namespace(tmrw_prices=[]) %}
+          {% if tomorrow_valid %}
+            {% for item in tomorrow_raw %}
+              {% set ns2.tmrw_prices = ns2.tmrw_prices + [(item.price | float(0) * 10) | round(0)] %}
+            {% endfor %}
+          {% endif %}
+          {{ (ns.today_prices + ns2.tmrw_prices)[:24] | join(',') }}
+        {% endif %}
+
+# ──────────────────────────────────────────────────────────────
+# Energy Tomorrow Data Valid
+# ──────────────────────────────────────────────────────────────
+- sensor:
+    - name: "Energy Tomorrow Data Valid"
+      unique_id: energy_tomorrow_data_valid
+      icon: mdi:check-circle
+      state: >
+        {% set tomorrow_raw = state_attr('sensor.pstryk_buy_price', 'prices_tomorrow') or [] %}
+        {% set tomorrow_prices = tomorrow_raw | map(attribute='price') | list %}
+        {% set valid = tomorrow_raw | count >= 20 and tomorrow_prices | unique | list != [0.0] %}
+        {{ valid }}
+
+# ═════════════════════════════════════════════════════════════
+# WEATHER AI-PACK SYSTEM (Trigger-based) - DODANO BRAKUJĄCE
+# ═════════════════════════════════════════════════════════════
+
+# ──────────────────────────────────────────────────────────────
+# Weather Forecast Raw Cache (trigger-based) - DODANY
+# ──────────────────────────────────────────────────────────────
+- trigger:
+    - platform: time_pattern
+      hours: "/6"
+    - platform: homeassistant
+      event: start
+  action:
+    - action: weather.get_forecasts
+      target:
+        entity_id: weather.dom
+      data:
+        type: daily
+      response_variable: daily_forecast
+    - action: weather.get_forecasts
+      target:
+        entity_id: weather.dom
+      data:
+        type: hourly
+      response_variable: hourly_forecast
+  sensor:
+    - name: "Weather Forecast Raw Cache"
+      unique_id: weather_forecast_raw_cache
+      state: "{{ now().isoformat() }}"
+      icon: mdi:weather-cloudy-clock
+      attributes:
+        today: "{{ daily_forecast['weather.dom'].forecast[0] | default({}) }}"
+        tomorrow: "{{ daily_forecast['weather.dom'].forecast[1] | default({}) }}"
+        hourly_12h: "{{ hourly_forecast['weather.dom'].forecast[:12] | default([]) }}"
+
+# ──────────────────────────────────────────────────────────────
+# Weather AI Pack Cache (trigger-based) - DODANY
+# ──────────────────────────────────────────────────────────────
+- trigger:
+    - platform: event
+      event_type: weather_ai_pack_updated
+  sensor:
+    - name: "Weather AI Pack Cache"
+      unique_id: weather_ai_pack_cache
+      state: "{{ trigger.event.data.status | default('unknown') }}"
+      icon: mdi:brain
+      attributes:
+        generated_at: "{{ trigger.event.data.generated_at | default('') }}"
+        fingerprint: "{{ trigger.event.data.fingerprint | default('') }}"
+        stale: "{{ trigger.event.data.stale | default(false) }}"
+        dashboard_today: "{{ trigger.event.data.dashboard.today | default('Brak danych.') }}"
+        dashboard_night: "{{ trigger.event.data.dashboard.night | default('Brak danych.') }}"
+        dashboard_tomorrow: "{{ trigger.event.data.dashboard.tomorrow | default('Brak danych.') }}"
+        morning_tts: "{{ trigger.event.data.morning.tts | default('') }}"
+        morning_pawel: "{{ trigger.event.data.morning.pawel | default('') }}"
+        morning_magda: "{{ trigger.event.data.morning.magda | default('') }}"
+        evening_tts: "{{ trigger.event.data.evening.tts | default('') }}"
+        evening_pawel: "{{ trigger.event.data.evening.pawel | default('') }}"
+        evening_magda: "{{ trigger.event.data.evening.magda | default('') }}"
+
+# ──────────────────────────────────────────────────────────────
+# Weather Dashboard Cache (trigger-based) - DODANY
+# ──────────────────────────────────────────────────────────────
+- trigger:
+    - platform: event
+      event_type: weather_ai_pack_updated
+    - platform: event
+      event_type: update_weather_dashboard_data
+  sensor:
+    - name: "Weather Dashboard Cache"
+      unique_id: weather_dashboard_cache
+      state: "{{ trigger.event.data.status | default('success') }}"
+      icon: mdi:weather-cloudy-clock
+      attributes:
+        last_update: "{{ now().isoformat() }}"
+        generated_at: "{{ trigger.event.data.generated_at | default(now().isoformat()) }}"
+        stale: "{{ trigger.event.data.stale | default(false) }}"
+        text_today: >
+          {% if trigger.event.event_type == 'weather_ai_pack_updated' %}
+            {{ trigger.event.data.dashboard.today | default('Brak danych') }}
+          {% else %}
+            {{ trigger.event.data.text_today | default('Brak danych') }}
+          {% endif %}
+        text_night: >
+          {% if trigger.event.event_type == 'weather_ai_pack_updated' %}
+            {{ trigger.event.data.dashboard.night | default('Brak danych') }}
+          {% else %}
+            {{ trigger.event.data.text_night | default('Brak danych') }}
+          {% endif %}
+        text_tomorrow: >
+          {% if trigger.event.event_type == 'weather_ai_pack_updated' %}
+            {{ trigger.event.data.dashboard.tomorrow | default('Brak danych') }}
+          {% else %}
+            {{ trigger.event.data.text_tomorrow | default('Brak danych') }}
+          {% endif %}
+
+# ──────────────────────────────────────────────────────────────
+# Weather AI Pack Age Minutes - DODANY
+# ──────────────────────────────────────────────────────────────
+- sensor:
+    - name: "Weather AI Pack Age Minutes"
+      unique_id: weather_ai_pack_age_minutes
+      icon: mdi:timer-sand
+      unit_of_measurement: "min"
+      state: >
+        {% set gen_at = states('input_datetime.weather_ai_pack_generated_at') %}
+        {% if gen_at in ['unknown', 'unavailable', '', 'None'] or gen_at is none %}
+          9999
+        {% else %}
+          {% set gen_ts = as_timestamp(gen_at, 0) %}
+          {% set now_ts = as_timestamp(now()) %}
+          {% if gen_ts > 0 %}
+            {{ ((now_ts - gen_ts) / 60) | round(0) }}
+          {% else %}
+            9999
+          {% endif %}
+        {% endif %}
+
+# ──────────────────────────────────────────────────────────────
+# Weather AI Pack Fingerprint Current - DODANY
+# ──────────────────────────────────────────────────────────────
+- sensor:
+    - name: "Weather AI Pack Fingerprint Current"
+      unique_id: weather_ai_pack_fingerprint_current
+      icon: mdi:fingerprint
+      state: >
+        {% set cache = states.sensor.weather_forecast_raw_cache %}
+        {% if cache is none or cache.state in ['unknown', 'unavailable'] %}
+          unavailable
+        {% else %}
+          {% set f_today = state_attr('sensor.weather_forecast_raw_cache', 'today') %}
+          {% set f_tmrw = state_attr('sensor.weather_forecast_raw_cache', 'tomorrow') %}
+          {% if f_today is none or f_tmrw is none or f_today is not mapping or f_tmrw is not mapping %}
+            unavailable
+          {% else %}
+            {% set pm25 = states('sensor.dom_pm2_5') | int(0) %}
+            {% set smog = 'GOOD' if pm25 < 25 else ('MOD' if pm25 < 50 else 'BAD') %}
+            {% set meteo = 'ON' if is_state('binary_sensor.meteoalarm', 'on') else 'OFF' %}
+            {% set hydro = states('sensor.warta_poznan_most_rocha_alert_hydrologiczny') | default('brak') %}
+            {% set meteo_event = state_attr('binary_sensor.meteoalarm', 'Event') | default('') | string %}
+            {{ [
+              states('weather.dom'),
+              f_today.condition | default(''),
+              f_today.temperature | default(0) | round(0),
+              f_today.templow | default(0) | round(0),
+              f_tmrw.condition | default(''),
+              f_tmrw.temperature | default(0) | round(0),
+              meteo,
+              meteo_event[:30],
+              smog,
+              hydro[:20] if hydro not in ['brak','unknown','unavailable'] else 'OK'
+            ] | join('|') }}
+          {% endif %}
+        {% endif %}
+
+# ──────────────────────────────────────────────────────────────
+# Smart Vacuum Upstairs Score Debug
+# ──────────────────────────────────────────────────────────────
+- sensor:
+    - name: "Smart Vacuum Upstairs Score Debug"
+      unique_id: smart_vacuum_upstairs_score_debug
+      icon: mdi:robot-vacuum
+      unit_of_measurement: "pkt"
+      state: >
+        {% set po = is_state('binary_sensor.motion_sensor_piesek_extended', 'on') %}
+        {% set bo = is_state('binary_sensor.motion_sensor_bedroom_extended', 'on') %}
+        {% set so = is_state('binary_sensor.motion_sensor_stairs_extended', 'on') %}
+        {% set pa = states('binary_sensor.motion_sensor_piesek_extended') in ['on','off'] %}
+        {% set ba = states('binary_sensor.motion_sensor_bedroom_extended') in ['on','off'] %}
+        {% set pe = 0 if (not pa or po) else ((as_timestamp(now()) - as_timestamp(states.binary_sensor.motion_sensor_piesek_extended.last_changed)) / 60) | float(0) %}
+        {% set be = 0 if (not ba or bo) else ((as_timestamp(now()) - as_timestamp(states.binary_sensor.motion_sensor_bedroom_extended.last_changed)) / 60) | float(0) %}
+        {% set se = 0 if so else ((as_timestamp(now()) - as_timestamp(states.binary_sensor.motion_sensor_stairs_extended.last_changed)) / 60) | float(0) %}
+        {% set bath = is_state('light.light_bathroom_1', 'off') %}
+        {% set pc = is_state('binary_sensor.device_piesek_pc', 'on') %}
+        {% set lap = is_state('binary_sensor.device_office_laptop', 'on') %}
+        {% set ph = is_state('person.pawel', 'home') %}
+        {% set mh = is_state('person.magda', 'home') %}
+        {% set s1 = (20 if pe > 20 else 0) + (15 if be > 20 else 0) + (5 if se > 15 else 0) + (5 if bath else 0) %}
+        {% set s2 = (10 if is_state('binary_sensor.motion_sensor_kitchen_extended','on') else 0)
+           + (8 if is_state('binary_sensor.motion_sensor_livingroom_extended','on') else 0)
+           + (5 if is_state('light.light_wc_1','on') else 0)
+           + (5 if is_state('binary_sensor.motion_sensor_corridor_occupancy','on') else 0)
+           + (5 if is_state('binary_sensor.motion_sensor_entrance_occupancy','on') else 0)
+           + (15 if is_state('binary_sensor.tv_enabled','on') else 0) %}
+        {% set s3 = 20 if (now().hour >= 13 and now().hour < 14) else 0 %}
+        {% set s4 = 15 if (now().weekday() < 5 and now().hour >= 9 and now().hour < 16) else 0 %}
+        {% set s5 = 10 if (now().hour >= 17 and now().hour < 20) else 0 %}
+        {% set s6 = 10 if (now().weekday() >= 5 and now().hour >= 10 and now().hour < 14) else 0 %}
+        {% set s7 = 15 if (ph != mh) else (10 if (ph and mh) else 0) %}
+        {% set s8 = 15 if (pe > 60 and be > 60) else 0 %}
+        {% set pm = ((as_timestamp(now()) - as_timestamp(states.person.pawel.last_changed)) / 60) | float(999) %}
+        {% set mm = ((as_timestamp(now()) - as_timestamp(states.person.magda.last_changed)) / 60) | float(999) %}
+        {% set s9 = -10 if ((ph or mh) and (pm < 15 or mm < 15)) else 0 %}
+        {% set s10 = 10 if ((pc and pe > 15) or (lap and pe > 15 and be > 15)) and now().hour >= 10 and now().hour < 18 else 0 %}
+        {% set s11 = 10 if (now().hour >= 19 and now().hour < 21 and pe > 20 and be > 20 and (is_state('binary_sensor.motion_sensor_kitchen_extended','on') or is_state('binary_sensor.motion_sensor_livingroom_extended','on') or is_state('binary_sensor.tv_enabled','on'))) else 0 %}
+        {{ [0, s1+s2+s3+s4+s5+s6+s7+s8+s9+s10+s11] | max }}
+      attributes:
+        piesek_empty_min: >
+          {% if is_state('binary_sensor.motion_sensor_piesek_extended', 'on') %}0
+          {% elif states('binary_sensor.motion_sensor_piesek_extended') not in ['on','off'] %}unavailable
+          {% else %}{{ ((as_timestamp(now()) - as_timestamp(states.binary_sensor.motion_sensor_piesek_extended.last_changed)) / 60) | float(0) | round(1) }}
+          {% endif %}
+        bedroom_empty_min: >
+          {% if is_state('binary_sensor.motion_sensor_bedroom_extended', 'on') %}0
+          {% elif states('binary_sensor.motion_sensor_bedroom_extended') not in ['on','off'] %}unavailable
+          {% else %}{{ ((as_timestamp(now()) - as_timestamp(states.binary_sensor.motion_sensor_bedroom_extended.last_changed)) / 60) | float(0) | round(1) }}
+          {% endif %}
+        stairs_empty_min: >
+          {% if is_state('binary_sensor.motion_sensor_stairs_extended', 'on') %}0
+          {% elif states('binary_sensor.motion_sensor_stairs_extended') not in ['on','off'] %}unavailable
+          {% else %}{{ ((as_timestamp(now()) - as_timestamp(states.binary_sensor.motion_sensor_stairs_extended.last_changed)) / 60) | float(0) | round(1) }}
+          {% endif %}
+        blocked: >
+          {% set po = is_state('binary_sensor.motion_sensor_piesek_extended', 'on') %}
+          {% set bo = is_state('binary_sensor.motion_sensor_bedroom_extended', 'on') %}
+          {% set sa = states('binary_sensor.motion_sensor_piesek_extended') in ['on','off'] %}
+          {% set sb = states('binary_sensor.motion_sensor_bedroom_extended') in ['on','off'] %}
+          {{ (not sa) or (not sb)
+             or is_state('input_boolean.sleeping_guest_piesek', 'on')
+             or is_state('input_select.bedroom_lighting_mode', 'Sen')
+             or is_state('binary_sensor.device_bedroom_projector', 'on')
+             or is_state('light.light_bathroom_1', 'on')
+             or po or bo }}
+        should_start: >
+          {% set score = states('sensor.smart_vacuum_upstairs_score') | int(0) %}
+          {% set blk = state_attr('sensor.smart_vacuum_upstairs_score', 'blocked') %}
+          {% set ran = state_attr('sensor.smart_vacuum_upstairs_score', 'ran_today') %}
+          {{ not ran and not blk and score >= 40 }}

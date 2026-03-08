@@ -1,0 +1,1432 @@
+---
+button_card_templates: !include_dir_merge_named "../../custom_components/ui_lovelace_minimalist/__ui_minimalist__/ulm_templates/"
+title: Dom
+views:
+  - theme: minimalist-desktop
+    path: default_view
+    title: Dom
+    icon: ''
+    badges: []
+    cards:
+      - type: custom:kontomierz-card
+        entity: sensor.to_do_list
+        show_header: true
+        show_completed: 3
+        show_item_add: false
+        use_quick_add: false
+        show_item_close: true
+        show_item_delete: false
+        only_today_overdue: false
+        max_completed_transactions: 0
+      - square: false
+        columns: 3
+        type: grid
+        cards:
+          - type: custom:stack-in-card
+            mode: vertical
+            cards:
+              - type: custom:mushroom-person-card
+                entity: person.pawel
+                use_entity_picture: true
+                hide_name: false
+                layout: horizontal
+                tap_action:
+                  action: more-info
+              - type: custom:mushroom-chips-card
+                chips:
+                  - type: template
+                    icon_color: |2-
+                                {% set state=states('binary_sensor.rmx2202_is_charging') %}
+                                {% if state=='on' %}
+                                green
+                                {% elif state=='off' %}
+                                #6f6f6f
+                               {% endif %}
+                    entity: binary_sensor.rmx2202_is_charging
+                    icon: mdi:power-plug
+                    tap_action:
+                      action: more-info
+                  - type: template
+                    entity: sensor.rmx2202_battery_level
+                    icon: |2
+                                {% set bl = states('sensor.rmx2202_battery_level') | int %}
+                                {% if bl < 10 %} mdi:battery-outline
+                                {% elif bl < 20 %} mdi:battery-10
+                                {% elif bl < 30 %} mdi:battery-20
+                                {% elif bl < 40 %} mdi:battery-30
+                                {% elif bl < 50 %} mdi:battery-40
+                                {% elif bl < 60 %} mdi:battery-50
+                                {% elif bl < 70 %} mdi:battery-60
+                                {% elif bl < 80 %} mdi:battery-70
+                                {% elif bl < 90 %} mdi:battery-80
+                                {% elif bl < 100 %} mdi:battery-90
+                                {% elif bl == 100 %} mdi:battery
+                                {% else %} mdi:battery-unknown
+                                {% endif %}
+                    icon_color: |2-
+                                {% set bl = states('sensor.rmx2202_battery_level') | int %}
+                                {% if bl < 10 %} red
+                                {% elif bl < 20 %} red
+                                {% elif bl < 30 %} red
+                                {% elif bl < 40 %} orange
+                                {% elif bl < 50 %} orange
+                                {% elif bl < 60 %} green
+                                {% elif bl < 70 %} green
+                                {% elif bl < 80 %} green
+                                {% elif bl < 90 %} green
+                                {% elif bl < 100 %} green
+                                {% elif bl == 100 %} green
+                                {% else %} grey
+                                {% endif %}
+                    tap_action:
+                      action: more-info
+                alignment: center
+          - type: custom:stack-in-card
+            mode: vertical
+            cards:
+              - type: custom:mushroom-person-card
+                entity: person.magda
+                use_entity_picture: true
+                hide_name: false
+                layout: horizontal
+                tap_action:
+                  action: more-info
+              - type: custom:mushroom-chips-card
+                chips:
+                  - type: template
+                    icon_color: |2-
+                                {% set state=states('sensor.iphone_magdalena_battery_state') %}
+                                {% if state=='Charging' %}
+                                green
+                                {% else %}
+                                #6f6f6f
+                               {% endif %}
+                    entity: sensor.iphone_magdalena_battery_state
+                    icon: mdi:power-plug
+                    tap_action:
+                      action: more-info
+                  - type: template
+                    entity: sensor.iphone_magdalena_battery_level
+                    icon: |2
+                                {% set bl = states('sensor.iphone_magdalena_battery_level') | int %}
+                                {% if bl < 10 %} mdi:battery-outline
+                                {% elif bl < 20 %} mdi:battery-10
+                                {% elif bl < 30 %} mdi:battery-20
+                                {% elif bl < 40 %} mdi:battery-30
+                                {% elif bl < 50 %} mdi:battery-40
+                                {% elif bl < 60 %} mdi:battery-50
+                                {% elif bl < 70 %} mdi:battery-60
+                                {% elif bl < 80 %} mdi:battery-70
+                                {% elif bl < 90 %} mdi:battery-80
+                                {% elif bl < 100 %} mdi:battery-90
+                                {% elif bl == 100 %} mdi:battery
+                                {% else %} mdi:battery-unknown
+                                {% endif %}
+                    icon_color: |2-
+                                {% set bl = states('sensor.iphone_magdalena_battery_level') | int %}
+                                {% if bl < 10 %} red
+                                {% elif bl < 20 %} red
+                                {% elif bl < 30 %} red
+                                {% elif bl < 40 %} orange
+                                {% elif bl < 50 %} orange
+                                {% elif bl < 60 %} green
+                                {% elif bl < 70 %} green
+                                {% elif bl < 80 %} green
+                                {% elif bl < 90 %} green
+                                {% elif bl < 100 %} green
+                                {% elif bl == 100 %} green
+                                {% else %} grey
+                                {% endif %}
+                    tap_action:
+                      action: more-info
+                alignment: center
+          - type: custom:stack-in-card
+            mode: vertical
+            cards:
+              - type: custom:mushroom-person-card
+                entity: person.perelka
+                use_entity_picture: true
+                hide_name: false
+                layout: horizontal
+                tap_action:
+                  action: more-info
+              - type: custom:mushroom-chips-card
+                chips:
+                  - type: template
+                    entity: sensor.tracker_1_motion
+                    icon: mdi:car-arrow-right
+                    icon_color: |2-
+                                {% set state=states('sensor.tracker_1_motion') %}
+                                {% if state=='True' %}
+                                green
+                                {% elif state=='False' %}
+                                #6f6f6f
+                               {% endif %}
+                    tap_action:
+                      action: more-info
+                  - type: template
+                    entity: sensor.tracker_1_battery
+                    icon: |2
+                                {% set bl = states('sensor.tracker_1_battery') | int %}
+                                {% if bl == -1 %} mdi:battery-unknown
+                                {% elif bl < 10 %} mdi:battery-outline
+                                {% elif bl < 20 %} mdi:battery-10
+                                {% elif bl < 30 %} mdi:battery-20
+                                {% elif bl < 40 %} mdi:battery-30
+                                {% elif bl < 50 %} mdi:battery-40
+                                {% elif bl < 60 %} mdi:battery-50
+                                {% elif bl < 70 %} mdi:battery-60
+                                {% elif bl < 80 %} mdi:battery-70
+                                {% elif bl < 90 %} mdi:battery-80
+                                {% elif bl < 100 %} mdi:battery-90
+                                {% elif bl == 100 %} mdi:battery
+                                {% else %} mdi:battery-unknown
+                                {% endif %}
+                    icon_color: |2-
+                                {% set bl = states('sensor.tracker_1_battery') | int %}
+                                {% if bl == -1 %} grey
+                                {% elif if bl < 10 %} red
+                                {% elif bl < 20 %} red
+                                {% elif bl < 30 %} red
+                                {% elif bl < 40 %} orange
+                                {% elif bl < 50 %} orange
+                                {% elif bl < 60 %} green
+                                {% elif bl < 70 %} green
+                                {% elif bl < 80 %} green
+                                {% elif bl < 90 %} green
+                                {% elif bl < 100 %} green
+                                {% elif bl == 100 %} green
+                                {% else %} grey
+                                {% endif %}
+                    tap_action:
+                      action: more-info
+                alignment: center
+      - square: false
+        columns: 4
+        type: grid
+        cards:
+          - type: custom:button-card
+            entity: sensor.zmieszane_odpady_komunalne_fbservice
+            icon: mdi:recycle
+            aspect_ratio: 1/1
+            show_name: false
+            styles:
+              grid:
+                - grid-template-areas: '"i" "days"'
+                - grid-template-columns: 1fr
+                - grid-template-rows: 1fr 0.2fr
+              icon:
+                - color: |-
+                    [[[
+                      if (entity.attributes['days_until_collection'] == 0) return '#FF0000'; // Dzisiaj - czerwony
+                      else if (entity.attributes['days_until_collection'] == 1) return '#FFA500'; // Jutro - pomarańczowy
+                      else if (entity.attributes['days_until_collection'] > 1) return '#00CCFF'; // Za kilka dni - niebieski
+                      else return '#808080'; // Nigdy - szary
+                    ]]]
+                - width: 70%
+              custom_fields:
+                days:
+                  - padding: 2px
+            custom_fields:
+              days: |
+                [[[
+                  if (entity.attributes['days_until_collection'] == 0) return "Dzisiaj";
+                  else if (entity.attributes['days_until_collection'] == 1) return "Jutro";
+                  else if (entity.attributes['days_until_collection'] == 2) return "Pojutrze";
+                  else if (entity.attributes['days_until_collection'] > 2)
+                    return "Za " + entity.attributes['days_until_collection'] + " dni";
+                  else
+                    return "Nigdy";
+                ]]]
+          - type: custom:button-card
+            entity: sensor.papier_fbservice
+            icon: mdi:file-document
+            aspect_ratio: 1/1
+            show_name: false
+            styles:
+              grid:
+                - grid-template-areas: '"i" "days"'
+                - grid-template-columns: 1fr
+                - grid-template-rows: 1fr 0.2fr
+              icon:
+                - color: |-
+                    [[[
+                      if (entity.attributes['days_until_collection'] == 0) return '#FF0000';
+                      else if (entity.attributes['days_until_collection'] == 1) return '#FFA500';
+                      else if (entity.attributes['days_until_collection'] > 1) return '#00CCFF';
+                      else return '#808080';
+                    ]]]
+                - width: 70%
+              custom_fields:
+                days:
+                  - padding: 2px
+            custom_fields:
+              days: |
+                [[[
+                  if (entity.attributes['days_until_collection'] == 0) return "Dzisiaj";
+                  else if (entity.attributes['days_until_collection'] == 1) return "Jutro";
+                  else if (entity.attributes['days_until_collection'] == 2) return "Pojutrze";
+                  else if (entity.attributes['days_until_collection'] > 2)
+                    return "Za " + entity.attributes['days_until_collection'] + " dni";
+                  else
+                    return "Nigdy";
+                ]]]
+          - type: custom:button-card
+            entity: sensor.metale_i_tworzywa_sztuczne_fbservice
+            icon: mdi:bottle-soda
+            aspect_ratio: 1/1
+            show_name: false
+            styles:
+              grid:
+                - grid-template-areas: '"i" "days"'
+                - grid-template-columns: 1fr
+                - grid-template-rows: 1fr 0.2fr
+              icon:
+                - color: |-
+                    [[[
+                      if (entity.attributes['days_until_collection'] == 0) return '#FF0000';
+                      else if (entity.attributes['days_until_collection'] == 1) return '#FFA500';
+                      else if (entity.attributes['days_until_collection'] > 1) return '#00CCFF';
+                      else return '#808080';
+                    ]]]
+                - width: 70%
+              custom_fields:
+                days:
+                  - padding: 2px
+            custom_fields:
+              days: |
+                [[[
+                  if (entity.attributes['days_until_collection'] == 0) return "Dzisiaj";
+                  else if (entity.attributes['days_until_collection'] == 1) return "Jutro";
+                  else if (entity.attributes['days_until_collection'] == 2) return "Pojutrze";
+                  else if (entity.attributes['days_until_collection'] > 2)
+                    return "Za " + entity.attributes['days_until_collection'] + " dni";
+                  else
+                    return "Nigdy";
+                ]]]
+          - type: custom:button-card
+            entity: sensor.szklo_fbservice
+            icon: mdi:glass-cocktail
+            aspect_ratio: 1/1
+            show_name: false
+            styles:
+              grid:
+                - grid-template-areas: '"i" "days"'
+                - grid-template-columns: 1fr
+                - grid-template-rows: 1fr 0.2fr
+              icon:
+                - color: |-
+                    [[[
+                      if (entity.attributes['days_until_collection'] == 0) return '#FF0000';
+                      else if (entity.attributes['days_until_collection'] == 1) return '#FFA500';
+                      else if (entity.attributes['days_until_collection'] > 1) return '#00CCFF';
+                      else return '#808080';
+                    ]]]
+                - width: 70%
+              custom_fields:
+                days:
+                  - padding: 2px
+            custom_fields:
+              days: |
+                [[[
+                  if (entity.attributes['days_until_collection'] == 0) return "Dzisiaj";
+                  else if (entity.attributes['days_until_collection'] == 1) return "Jutro";
+                  else if (entity.attributes['days_until_collection'] == 2) return "Pojutrze";
+                  else if (entity.attributes['days_until_collection'] > 2)
+                    return "Za " + entity.attributes['days_until_collection'] + " dni";
+                  else
+                    return "Nigdy";
+                ]]]
+      - type: grid
+        square: false
+        columns: 1
+        cards:
+          - type: custom:mushroom-title-card
+            title: Salon
+            alignment: justify
+          - type: custom:mushroom-chips-card
+            chips:
+              - type: entity
+                entity: sensor.zhimi_mc1_1903_indoor_temperature_2
+                icon_color: orange
+              - type: entity
+                entity: sensor.zhimi_mc1_1903_relative_humidity_2
+                icon_color: indigo
+              - type: entity
+                entity: sensor.zhimi_mc1_1903_pm25_density_2
+                icon_color: indigo
+              - type: entity
+                entity: binary_sensor.czujnik_ruchu_occupancy
+                icon_color: indigo
+              - type: entity
+                entity: binary_sensor.drzwi_balkon_contact
+                icon_color: indigo
+              - type: entity
+                entity: binary_sensor.motion_sensor_livingroom_occupancy
+                icon_color: indigo
+          - type: custom:button-card
+            template: card_media_player
+            entity: media_player.media_player_mpd
+            variables:
+              ulm_card_media_player_name: Livingroom Nvidia Shield
+          - type: media-control
+            entity: media_player.media_player_mpd
+          - type: entities
+            entities:
+              - entity: switch.socket_pc
+                type: custom:multiple-entity-row
+                state_header: Master
+                toggle: true
+                state_color: true
+                name: Komputer
+                entities:
+                  - entity: sensor.pc_energy_today
+                    name: Zużycie dzisiaj
+                    unit: Wh
+              - entity: switch.socket_1
+                type: custom:multiple-entity-row
+                name: Głośniki
+                state_header: Master
+                toggle: true
+                state_color: true
+                entities:
+                  - entity: input_button.speaker_vol_plus
+                    icon: mdi:plus-circle
+                    name: Głośniej
+                    tap_action:
+                      action: call-service
+                      service: script.speakers_volume
+                  - entity: input_button.speaker_vol_minus
+                    icon: mdi:minus-circle
+                    name: Ciszej
+                    tap_action:
+                      action: call-service
+                      service: script.speakers_volume_2
+                  - entity: input_boolean.glosniki
+                    name: Stan
+                    toggle: true
+              - entity: switch.socket_2
+                type: custom:multiple-entity-row
+                name: TV
+                state_header: Master
+                toggle: true
+                state_color: true
+                entities:
+                  - entity: sensor.power_strip_tv_energy_today
+                    name: Dzisiaj
+                    unit: Wh
+                  - entity: input_button.speaker_vol_plus
+                    icon: mdi:power-plug
+                    name: TVBox
+                    tap_action:
+                      action: call-service
+                      service: script.tv_hdmi_1
+                  - entity: input_button.speaker_vol_plus
+                    icon: mdi:power-plug
+                    name: PC
+                    tap_action:
+                      action: call-service
+                      service: script.tv_hdmi_3
+                  - entity: input_boolean.telewizor
+                    name: Stan
+                    toggle: true
+                  - entity: switch.socket_3
+                    name: TVBox
+                    toggle: true
+              - entity: switch.usb
+                type: custom:multiple-entity-row
+                state_header: Master
+                toggle: true
+                state_color: true
+                name: Urządzenia USB
+                entities: null
+              - type: custom:mushroom-select-card
+                entity: input_select.led
+                primary_info: name
+                secondary_info: state
+                layout: horizontal
+              - entity: input_boolean.red
+                type: custom:multiple-entity-row
+                name: Led
+                state_header: Stan
+                toggle: true
+                state_color: true
+                entities:
+                  - entity: input_button.led_2
+                    icon: mdi:plus-circle
+                    name: Jaśniej
+                    tap_action:
+                      action: call-service
+                      service: script.led_light
+                  - entity: input_button.led
+                    icon: mdi:minus-circle
+                    name: Ciemniej
+                    tap_action:
+                      action: call-service
+                      service: script.led_light_2
+              - entity: sensor.sonoff_2_action
+                type: custom:multiple-entity-row
+                name: Światło
+                show_state: false
+                entities:
+                  - entity: light.yeelink_monoa_0ec8_light
+                    name: Przełącz
+                    icon: mdi:light-switch
+                    tap_action:
+                      action: call-service
+                      service: script.livingroom_lights_switch
+                  - entity: light.yeelink_monoa_0ec8_light
+                    name: Lewa
+                    toggle: true
+                  - entity: light.yeelink_monoa_0559_light
+                    name: Prawa
+                    toggle: true
+                  - entity: switch.fire_lamp
+                    name: Płomień
+                    toggle: true
+              - type: custom:mushroom-fan-card
+                entity: fan.zhimi_mc1_1903_air_purifier_2
+                show_oscillate_control: false
+                show_percentage_control: true
+                collapsible_controls: false
+                layout: horizontal
+              - type: custom:fold-entity-row
+                head: sensor.hp_deskjet_2640_series_hpcups_3_18_12
+                entities:
+                  - entity: counter.last_print_days
+                  - entity: sensor.hp_fax4_hpcups
+            state_color: false
+            show_header_toggle: false
+          - type: custom:mushroom-title-card
+            subtitle: Kwiatki
+            alignment: justify
+          - type: custom:mushroom-chips-card
+            chips:
+              - type: template
+                entity: sensor.fc_28_soil_moisture_level
+                content: >-
+                  {% set value = states.sensor.fc_28_soil_moisture_level.state
+                  %}
+
+                  {% if value == 'unavailable' %}
+                    {% set value = 'nieznany' %}
+                  {% endif %}
+
+                  Dracena: {{value}}
+                tap_action:
+                  action: more-info
+                icon: mdi:flower
+                icon_color: green
+          - type: custom:mushroom-title-card
+            subtitle: Media
+            alignment: justify
+          - type: media-control
+            entity: media_player.lg_webos_smart_tv
+          - type: media-control
+            entity: media_player.salon
+          - type: media-control
+            entity: media_player.tv_smart_4k_box
+      - type: grid
+        square: false
+        columns: 1
+        cards:
+          - type: custom:weather-card
+            entity: weather.dom
+            name: Pogoda
+            current: true
+            details: true
+            forecast: true
+            hourly_forecast: false
+            number_of_forecasts: '5'
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: camera.ipcam_profile1
+                state: unavailable
+            card:
+              show_state: true
+              show_name: true
+              camera_view: auto
+              type: picture-entity
+              entity: camera.camera_front_door_profile
+              name: Wejście
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: camera.camera_front_door_profile
+                state: unavailable
+            card:
+              show_state: true
+              show_name: true
+              camera_view: auto
+              type: picture-entity
+              entity: camera.ipcam_profile1
+              name: Wejście
+          - show_state: true
+            show_name: true
+            camera_view: auto
+            type: picture-entity
+            entity: camera.zewntrzna_sub
+            name: Podwórko
+      - square: false
+        columns: 3
+        type: grid
+        cards:
+          - type: custom:stack-in-card
+            mode: vertical
+            cards:
+              - type: custom:button-card
+                entity: device_tracker.tracker_1
+                icon: mdi:car
+                aspect_ratio: 1/1
+                show_name: false
+                styles:
+                  grid:
+                    - grid-template-areas: '"i" "localisation"'
+                    - grid-template-columns: 1fr
+                    - grid-template-rows: 1fr 0.2fr
+                  icon:
+                    - color: |-
+                        [[[
+                          if (entity.attributes['status'] == 'online')
+                            return 'green';
+                          else return '#808080';
+                        ]]]
+                    - width: 70%
+                  custom_fields:
+                    localisation:
+                      - padding: 2px
+                custom_fields:
+                  localisation: |-
+                    [[[
+                      return entity.state;
+                    ]]]
+              - type: custom:mushroom-chips-card
+                chips:
+                  - type: template
+                    entity: sensor.tracker_1_motion
+                    icon_color: |2-
+                                {% set motion = state_attr('device_tracker.tracker_1', 'motion') | bool %}
+                                {% if motion == true %} red
+                                {% else %} grey
+                                {% endif %}
+                    icon: mdi:traffic-light
+                    tap_action:
+                      action: more-info
+                  - type: template
+                    entity: sensor.tracker_1_battery_filtered
+                    icon: |2-
+                                {% set states = states('sensor.tracker_1_battery_filtered')  %}
+                                {% set bl = states | int if states != 'unknown' else -1 %}                    {% if bl >= 0 and bl < 10 %} mdi:battery-outline
+                                {% elif bl < 20 %} mdi:battery-10
+                                {% elif bl < 30 %} mdi:battery-20
+                                {% elif bl < 40 %} mdi:battery-30
+                                {% elif bl < 50 %} mdi:battery-40
+                                {% elif bl < 60 %} mdi:battery-50
+                                {% elif bl < 70 %} mdi:battery-60
+                                {% elif bl < 80 %} mdi:battery-70
+                                {% elif bl < 90 %} mdi:battery-80
+                                {% elif bl < 100 %} mdi:battery-90
+                                {% elif bl == 100 %} mdi:battery
+                                {% else %} mdi:battery-unknown
+                                {% endif %}
+                    icon_color: |2-
+                                {% set states = states('sensor.tracker_1_battery_filtered')  %}
+                                {% set bl = states | int if states != 'unknown' else -1 %}                    {% if bl >= 0 and bl < 10 %} red
+                                {% elif bl < 20 %} red
+                                {% elif bl < 30 %} red
+                                {% elif bl < 40 %} orange
+                                {% elif bl < 50 %} orange
+                                {% elif bl < 60 %} green
+                                {% elif bl < 70 %} green
+                                {% elif bl < 80 %} green
+                                {% elif bl < 90 %} green
+                                {% elif bl < 100 %} green
+                                {% elif bl == 100 %} green
+                                {% else %} grey
+                                {% endif %}
+                    tap_action:
+                      action: more-info
+                alignment: center
+          - type: custom:stack-in-card
+            mode: vertical
+            cards:
+              - type: custom:button-card
+                entity: device_tracker.tracker_2
+                icon: mdi:scooter
+                aspect_ratio: 1/1
+                show_name: false
+                styles:
+                  grid:
+                    - grid-template-areas: '"i" "localisation"'
+                    - grid-template-columns: 1fr
+                    - grid-template-rows: 1fr 0.2fr
+                  icon:
+                    - color: |-
+                        [[[
+                          if (entity.attributes['status'] == 'online')
+                            return 'green';
+                          else return '#808080';
+                        ]]]
+                    - width: 70%
+                  custom_fields:
+                    localisation:
+                      - padding: 2px
+                custom_fields:
+                  localisation: |-
+                    [[[
+                      return entity.state;
+                    ]]]
+              - type: custom:mushroom-chips-card
+                chips:
+                  - type: template
+                    entity: sensor.tracker_2_motion
+                    icon_color: |2-
+                                {% set motion = state_attr('device_tracker.tracker_2', 'motion') | bool %}
+                                {% if motion == true %} red
+                                {% else %} grey
+                                {% endif %}
+                    icon: mdi:traffic-light
+                    tap_action:
+                      action: more-info
+                  - type: template
+                    entity: sensor.tracker_2_battery_filtered
+                    icon: |2-
+                                {% set states = states('sensor.tracker_2_battery_filtered')  %}
+                                {% set bl = states | int if states != 'unknown' else -1 %}                    {% if bl >= 0 and bl < 10 %} mdi:battery-outline
+                                {% elif bl < 20 %} mdi:battery-10
+                                {% elif bl < 30 %} mdi:battery-20
+                                {% elif bl < 40 %} mdi:battery-30
+                                {% elif bl < 50 %} mdi:battery-40
+                                {% elif bl < 60 %} mdi:battery-50
+                                {% elif bl < 70 %} mdi:battery-60
+                                {% elif bl < 80 %} mdi:battery-70
+                                {% elif bl < 90 %} mdi:battery-80
+                                {% elif bl < 100 %} mdi:battery-90
+                                {% elif bl == 100 %} mdi:battery
+                                {% else %} mdi:battery-unknown
+                                {% endif %}
+                    icon_color: |2-
+                                {% set states = states('sensor.tracker_2_battery_filtered')  %}
+                                {% set bl = states | int if states != 'unknown' else -1 %}                    {% if bl >= 0 and bl < 10 %} red
+                                {% elif bl < 20 %} red
+                                {% elif bl < 30 %} red
+                                {% elif bl < 40 %} orange
+                                {% elif bl < 50 %} orange
+                                {% elif bl < 60 %} green
+                                {% elif bl < 70 %} green
+                                {% elif bl < 80 %} green
+                                {% elif bl < 90 %} green
+                                {% elif bl < 100 %} green
+                                {% elif bl == 100 %} green
+                                {% else %} grey
+                                {% endif %}
+                    tap_action:
+                      action: more-info
+                alignment: center
+          - type: custom:stack-in-card
+            mode: vertical
+            cards:
+              - type: custom:button-card
+                entity: device_tracker.tracker_3
+                icon: mdi:devices
+                aspect_ratio: 1/1
+                show_name: false
+                styles:
+                  grid:
+                    - grid-template-areas: '"i" "localisation"'
+                    - grid-template-columns: 1fr
+                    - grid-template-rows: 1fr 0.2fr
+                  icon:
+                    - color: |-
+                        [[[
+                          if (entity.attributes['status'] == 'online')
+                            return 'green';
+                          else return '#808080';
+                        ]]]
+                    - width: 70%
+                  custom_fields:
+                    localisation:
+                      - padding: 2px
+                custom_fields:
+                  localisation: |-
+                    [[[
+                      return entity.state;
+                    ]]]
+              - type: custom:mushroom-chips-card
+                chips:
+                  - type: template
+                    entity: sensor.tracker_3_motion
+                    icon_color: |2-
+                                {% set motion = state_attr('device_tracker.tracker_3', 'motion') | bool %}
+                                {% if motion == true %} red
+                                {% else %} grey
+                                {% endif %}
+                    icon: mdi:traffic-light
+                    tap_action:
+                      action: more-info
+                  - type: template
+                    entity: sensor.tracker_3_battery_filtered
+                    icon: |2-
+                                {% set states = states('sensor.tracker_3_battery_filtered')  %}
+                                {% set bl = states | int if states != 'unknown' else -1 %}
+                                {% if bl >= 0 and bl < 10 %} mdi:battery-outline
+                                {% elif bl < 20 %} mdi:battery-10
+                                {% elif bl < 30 %} mdi:battery-20
+                                {% elif bl < 40 %} mdi:battery-30
+                                {% elif bl < 50 %} mdi:battery-40
+                                {% elif bl < 60 %} mdi:battery-50
+                                {% elif bl < 70 %} mdi:battery-60
+                                {% elif bl < 80 %} mdi:battery-70
+                                {% elif bl < 90 %} mdi:battery-80
+                                {% elif bl < 100 %} mdi:battery-90
+                                {% elif bl == 100 %} mdi:battery
+                                {% else %} mdi:battery-unknown
+                                {% endif %}
+                    icon_color: |2-
+                                {% set states = states('sensor.tracker_3_battery_filtered')  %}
+                                {% set bl = states | int if states != 'unknown' else -1 %}                    {% if bl >= 0 and bl < 10 %} red
+                                {% elif bl < 20 %} red
+                                {% elif bl < 30 %} red
+                                {% elif bl < 40 %} orange
+                                {% elif bl < 50 %} orange
+                                {% elif bl < 60 %} green
+                                {% elif bl < 70 %} green
+                                {% elif bl < 80 %} green
+                                {% elif bl < 90 %} green
+                                {% elif bl < 100 %} green
+                                {% elif bl == 100 %} green
+                                {% else %} grey
+                                {% endif %}
+                    tap_action:
+                      action: more-info
+                alignment: center
+      - type: thermostat
+        entity: climate.wthermostat
+      - type: grid
+        square: false
+        columns: 1
+        cards:
+          - type: custom:mushroom-title-card
+            title: Piesek
+            alignment: justify
+          - type: custom:mushroom-chips-card
+            chips:
+              - type: entity
+                entity: sensor.temperature_humidity_sensor_15f3_temperature
+                icon_color: orange
+              - type: entity
+                entity: sensor.temperature_humidity_sensor_15f3_humidity
+                icon_color: indigo
+              - type: entity
+                entity: sensor.zhimi_mb4a_e02f_pm25_density_2
+                icon_color: indigo
+              - type: entity
+                entity: binary_sensor.okno_sypialnia_contact
+                icon_color: indigo
+              - type: entity
+                entity: binary_sensor.okno_sypialnia_contact
+                icon_color: indigo
+          - type: custom:stack-in-card
+            mode: horizontal
+            cards:
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    entity: switch.curtains_piesek_close
+                    name: Zamknij zasłony
+                    icon: mdi:window-shutter
+                  - type: custom:button-card
+                    entity: switch.curtains_piesek_open
+                    name: Otwórz zasłony
+                    icon: mdi:window-shutter-open
+                  - type: custom:button-card
+                    entity: switch.curtains_piesek_stop
+                    name: Zatrzymaj zasłony
+                    icon: mdi:window-shutter-alert
+          - type: grid
+            square: false
+            columns: 3
+            cards:
+              - type: custom:stack-in-card
+                mode: vertical
+                cards:
+                  - type: vertical-stack
+                    cards:
+                      - type: custom:button-card
+                        entity: switch.socket_pc
+                        name: Gniazdko PC
+                        icon: mdi:power-socket
+                        tap_action:
+                          action: toggle
+                      - type: entity
+                        entity: sensor.pc_energy_today
+              - type: custom:stack-in-card
+                mode: vertical
+                cards:
+                  - type: custom:button-card
+                    entity: light.light_piesek_1
+                    name: Światło 1
+                    icon: mdi:lightbulb
+                  - type: custom:button-card
+                    entity: light.light_piesek_2
+                    name: Światło 2
+                    icon: mdi:lightbulb
+      - type: grid
+        square: false
+        columns: 1
+        cards:
+          - type: custom:mushroom-title-card
+            title: Kuchnia
+            alignment: justify
+          - type: custom:mushroom-chips-card
+            chips:
+              - type: entity
+                entity: binary_sensor.motion_sensor_kitchen_occupancy
+                icon_color: indigo
+              - type: entity
+                entity: binary_sensor.contact_kitchen_contact
+                icon_color: indigo
+                use_entity_picture: false
+          - type: custom:stack-in-card
+            mode: horizontal
+            cards:
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    entity: switch.curtains_kitchen_close
+                    name: Zamknij zasłony
+                    icon: mdi:window-shutter
+                  - type: custom:button-card
+                    entity: switch.curtains_kitchen_open
+                    name: Otwórz zasłony
+                    icon: mdi:window-shutter-open
+                  - type: custom:button-card
+                    entity: switch.curtains_kitchen_stop
+                    name: Zatrzymaj zasłony
+                    icon: mdi:window-shutter-alert
+          - type: grid
+            square: false
+            columns: 3
+            cards:
+              - type: custom:stack-in-card
+                mode: vertical
+                cards:
+                  - type: custom:button-card
+                    entity: light.light_kitchen_1
+                    name: Światło 1
+                    icon: mdi:lightbulb
+                  - type: custom:button-card
+                    entity: light.light_kitchen_2
+                    name: Światło 2
+                    icon: mdi:lightbulb
+              - type: custom:stack-in-card
+                mode: vertical
+                cards:
+                  - type: custom:button-card
+                    entity: light.led_kitchen_light
+                    name: LED RGB
+                    icon: mdi:lightbulb
+                  - type: custom:button-card
+                    entity: light.socket_led_kitchen
+                    name: LED Szafki
+                    icon: mdi:lightbulb
+              - type: custom:stack-in-card
+                mode: vertical
+                cards:
+                  - type: vertical-stack
+                    cards:
+                      - type: custom:button-card
+                        entity: switch.fridge
+                        name: Lodówka
+                        icon: mdi:fridge
+                        tap_action:
+                          action: toggle
+                      - type: entity
+                        name: Dzisiaj
+                        entity: sensor.fridge_energy_today
+              - type: custom:stack-in-card
+                mode: vertical
+                cards:
+                  - type: vertical-stack
+                    cards:
+                      - type: custom:button-card
+                        entity: switch.socket_dishwasher
+                        name: Zmywarka
+                        icon: mdi:dishwasher
+                        tap_action:
+                          action: toggle
+                      - type: entity
+                        name: Dzisiaj
+                        entity: sensor.dishwasher_energy_today
+              - type: custom:stack-in-card
+                mode: vertical
+                cards:
+                  - type: vertical-stack
+                    cards:
+                      - type: custom:button-card
+                        entity: switch.socket_kitchen_monsterek_1
+                        name: Monsterek
+                        icon: mdi:robot-industrial
+                        tap_action:
+                          action: toggle
+                      - type: entity
+                        name: Dzisiaj
+                        entity: sensor.socket_kitchen_monsterek_daily_consumption
+              - type: custom:stack-in-card
+                mode: vertical
+                cards:
+                  - type: vertical-stack
+                    cards:
+                      - type: custom:button-card
+                        entity: switch.1_7
+                        name: Mikrofala
+                        icon: mdi:microwave
+                        tap_action:
+                          action: toggle
+                      - type: entity
+                        name: Dzisiaj
+                        entity: sensor.microwave_socket_daily_consumption
+          - type: custom:stack-in-card
+            mode: vertical
+            cards:
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    entity: counter.water_filters_days
+                    name: Filtr wody
+                    icon: mdi:water
+                    show_state: true
+                  - type: custom:button-card
+                    entity: switch.czajnik_setti_kt950w_start
+                    name: Sterowanie
+                    show_state: true
+                    color_type: card
+                    state:
+                      - value: 'on'
+                        color: rgb(5, 147, 255)
+                        icon: mdi:kettle-alert
+                        name: Grzej
+                    state_color: true
+                    show_icon: true
+                  - type: custom:button-card
+                    entity: switch.setti_kettle_keep_warm
+                    name: Podgrzewaj
+                    show_state: true
+                    color_type: card
+                    state:
+                      - value: 'on'
+                        color: rgb(5, 147, 255)
+                        icon: mdi:kettle-alert
+                        name: Nazwa pogrzewania
+                    state_color: true
+                    show_icon: true
+              - type: horizontal-stack
+                cards:
+                  - type: custom:fold-entity-row
+                    head: water_heater.setti_kettle
+                    name: Czajnik 2
+                    entities:
+                      - entity: number.setti_kettle_keep_warm_time
+                      - entity: number.setti_kettle_boil_temperature
+                      - entity: >-
+                          number.czajnik_setti_kt950w_temperature_after_boiling_2
+      - type: grid
+        square: false
+        columns: 1
+        cards:
+          - type: custom:mushroom-title-card
+            title: Korytarz
+            alignment: justify
+          - type: custom:mushroom-chips-card
+            chips:
+              - type: entity
+                entity: binary_sensor.drzwi_wejsciowe_contact
+                icon_color: indigo
+              - type: entity
+                entity: binary_sensor.motion_sensor_entrance_occupancy
+                icon_color: indigo
+          - type: grid
+            square: false
+            columns: 3
+            cards:
+              - type: custom:button-card
+                entity: light.light_entrance_1
+                name: Światło
+                icon: mdi:lightbulb
+              - type: custom:button-card
+                entity: switch.chuangmi_v2_4719_switch_status
+                name: Kamera
+                icon: mdi:camera
+          - type: custom:xiaomi-vacuum-map-card
+            preset_name: Live map
+            map_locked: true
+            entity: vacuum.viomi_v8_9672_robot_cleaner_2
+            map_source:
+              camera: camera.xiaomi_cloud_map_extractor
+            calibration_source:
+              camera: true
+            vacuum_platform: al-one/hass-xiaomi-miot
+      - type: grid
+        square: false
+        columns: 1
+        cards:
+          - type: custom:mushroom-title-card
+            title: Sypialnia
+            alignment: justify
+          - type: custom:mushroom-chips-card
+            chips:
+              - type: entity
+                entity: sensor.temperature_humidity_sensor_15f3_temperature
+                icon_color: orange
+              - type: entity
+                entity: sensor.temperature_humidity_sensor_15f3_humidity
+                icon_color: indigo
+              - type: entity
+                entity: sensor.zhimi_mb4a_e02f_pm25_density_2
+                icon_color: indigo
+              - type: entity
+                entity: binary_sensor.okno_sypialnia_contact
+                icon_color: indigo
+          - type: custom:stack-in-card
+            mode: vertical
+            cards:
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    entity: switch.curtains_bedroom_close
+                    name: Zamknij zasłony
+                    icon: mdi:window-shutter
+                  - type: custom:button-card
+                    entity: switch.curtains_bedroom_open
+                    name: Otwórz zasłony
+                    icon: mdi:window-shutter-open
+                  - type: custom:button-card
+                    entity: switch.curtains_bedroom_stop
+                    name: Zatrzymaj zasłony
+                    icon: mdi:window-shutter-alert
+          - type: grid
+            square: false
+            columns: 3
+            cards:
+              - type: custom:stack-in-card
+                mode: vertical
+                cards:
+                  - type: vertical-stack
+                    cards:
+                      - type: custom:button-card
+                        entity: switch.socket_pc
+                        name: Gniazdko PC
+                        icon: mdi:power-socket
+                        tap_action:
+                          action: toggle
+                      - type: entity
+                        entity: sensor.pc_energy_today
+              - type: custom:stack-in-card
+                mode: vertical
+                cards:
+                  - type: custom:button-card
+                    entity: light.light_piesek_1
+                    name: Światło 1
+                    icon: mdi:lightbulb
+                  - type: custom:button-card
+                    entity: light.light_piesek_2
+                    name: Światło 2
+                    icon: mdi:lightbulb
+              - type: custom:stack-in-card
+                mode: vertical
+                cards:
+                  - type: custom:button-card
+                    entity: light.light_piesek_1
+                    name: LED todo
+                    icon: mdi:led-strip
+                  - type: custom:button-card
+                    entity: light.light_piesek_2
+                    name: Toaletka todo
+                    icon: mdi:face-recognition
+      - type: grid
+        square: false
+        columns: 1
+        cards:
+          - type: custom:mushroom-title-card
+            title: Różne
+            alignment: justify
+          - type: custom:stack-in-card
+            mode: horizontal
+            cards:
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    entity: binary_sensor.openwrt_d_link_dwr_116_a1_a2
+                    name: Router
+                    icon: mdi:router-network-wireless
+                  - type: custom:button-card
+                    entity: switch.pi_hole
+                    name: Pi-hole
+                  - type: custom:button-card
+                    entity: >-
+                      button.synchronize_devicesbinary_sensor.zigbee2mqtt_bridge_connection_state
+                    name: Sync
+                    icon: mdi:google
+          - type: custom:stack-in-card
+            mode: horizontal
+            cards:
+              - type: horizontal-stack
+                cards:
+                  - type: entity
+                    entity: sensor.peka_pawel
+                    name: Peka Paweł
+                  - type: entity
+                    entity: sensor.peka_pawel
+                    name: Peka Magda todo
+          - type: custom:stack-in-card
+            mode: horizontal
+            cards:
+              - type: horizontal-stack
+                cards:
+                  - type: entity
+                    entity: binary_sensor.zigbee2mqtt_bridge_connection_state
+                    name: Z2M
+                  - type: custom:button-card
+                    entity: switch.zigbee2mqtt_bridge_permit_join
+                    name: Join
+                  - type: custom:button-card
+                    entity: switch.zigbee2mqtt_bridge_restart
+                    name: Restart
+                    icon: mdi:restart
+      - type: grid
+        square: false
+        columns: 1
+        cards:
+          - type: custom:mushroom-title-card
+            title: Toaleta
+            alignment: justify
+          - type: custom:mushroom-chips-card
+            chips:
+              - type: entity
+                entity: sensor.temperature_humidity_sensor_15f3_temperature
+                icon_color: orange
+              - type: entity
+                entity: sensor.temperature_humidity_sensor_15f3_humidity
+                icon_color: indigo
+          - type: grid
+            square: false
+            columns: 3
+            cards:
+              - type: custom:stack-in-card
+                mode: vertical
+                cards:
+                  - type: custom:button-card
+                    entity: light.light_wc_1
+                    name: Światło
+                    icon: mdi:lightbulb
+              - type: custom:stack-in-card
+                mode: vertical
+                cards:
+                  - type: vertical-stack
+                    cards:
+                      - type: custom:button-card
+                        entity: switch.socket_wc_junkers_1
+                        name: Junkers
+                        icon: mdi:gas-burner
+                        tap_action:
+                          action: toggle
+                      - type: entity
+                        entity: sensor.socket_wc_junkers_daily_consumption
+      - type: grid
+        square: false
+        columns: 1
+        cards:
+          - type: custom:mushroom-title-card
+            title: Łazienka
+            alignment: justify
+          - type: custom:mushroom-chips-card
+            chips:
+              - type: entity
+                entity: sensor.temperature_humidity_sensor_15f3_temperature
+                icon_color: orange
+              - type: entity
+                entity: sensor.temperature_humidity_sensor_15f3_humidity
+                icon_color: indigo
+          - type: custom:stack-in-card
+            mode: vertical
+            cards:
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    entity: sensor.pralka_washer_machine_state
+                    name: Pralka
+                    icon: mdi:washing-machine
+                  - type: custom:button-card
+                    entity: sensor.pralka_washer_job_state
+                    name: Zadanie
+                    icon: mdi:view-dashboard
+                  - type: entity
+                    entity: sensor.device_bathroom_washer_daily_consumption
+                    name: Prąd dziś
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    entity: sensor.suszarka_dryer_machine_state
+                    name: Suszarka
+                    icon: mdi:tumble-dryer
+                  - type: custom:button-card
+                    entity: sensor.pralka_washer_job_state
+                    name: Zadanie
+                    icon: mdi:view-dashboard
+                  - type: entity
+                    entity: sensor.device_bathroom_dryer_daily_consumption
+                    name: Prąd dziś
+          - type: grid
+            square: false
+            columns: 3
+            cards:
+              - type: custom:stack-in-card
+                mode: vertical
+                cards:
+                  - type: custom:button-card
+                    entity: light.light_bathroom_1
+                    name: Światło
+                    icon: mdi:lightbulb
+                  - type: custom:button-card
+                    entity: light.light_bathroom_1
+                    name: LED todo
+                    icon: mdi:led-strip-variant
+              - type: custom:stack-in-card
+                mode: vertical
+                cards:
+                  - type: vertical-stack
+                    cards:
+                      - type: custom:button-card
+                        entity: light.light_bathroom_mirror_back
+                        name: Podświetlenie
+                        icon: mdi:mirror-rectangle
+                      - type: custom:button-card
+                        entity: light.light_bathroom_mirror_top
+                        name: Oświetlenie
+                        icon: mdi:upload-multiple-outline
+              - type: custom:stack-in-card
+                mode: vertical
+                cards:
+                  - type: entity
+                    entity: counter.contact_lenses_days
+                    name: Soczewki
+                    unit: dni
+  - theme: Backend-selected
+    title: Tracking
+    path: tracking
+    badges: []
+    cards:
+      - square: false
+        columns: 1
+        type: grid
+        cards:
+          - type: custom:tracking-number-card
+            entity: sensor.email_paulomac_o2_pl
+      - square: false
+        columns: 1
+        type: grid
+        cards:
+          - type: custom:tracking-number-card
+            entity: sensor.email_paulomac1000_gmail_com
+  - title: Backup
+    path: backup
+    badges: []
+    cards:
+      - type: grid
+        square: false
+        columns: 1
+        cards:
+          - type: custom:mushroom-title-card
+            title: Kuchnia
+            alignment: justify
+          - type: custom:mushroom-chips-card
+            chips:
+              - type: entity
+                entity: binary_sensor.motion_sensor_kitchen_occupancy
+                icon_color: indigo
+          - type: custom:mushroom-chips-card
+            chips:
+              - type: entity
+                entity: binary_sensor.okno_kuchnia_contact
+                icon_color: indigo
+          - type: entities
+            entities:
+              - entity: light.led_kitchen_light
+                type: custom:multiple-entity-row
+                name: Światło
+                show_state: false
+                entities:
+                  - entity: light.light_kitchen_1
+                    name: Małe
+                    toggle: true
+                  - entity: light.light_kitchen_2
+                    name: Duże
+                    toggle: true
+                  - entity: light.led_kitchen_light
+                    name: Ledy
+                    toggle: true
+              - type: custom:multiple-entity-row
+                name: Lodówka
+                entity: switch.fridge
+                state_header: Stan
+                toggle: true
+                state_color: true
+                entities:
+                  - entity: sensor.fridge_energy_today
+                    name: Zużycie dzisiaj
+                    unit: Wh
+              - entity: switch.socket_dishwasher
+                type: custom:multiple-entity-row
+                state_header: Stan
+                toggle: true
+                state_color: true
+                entities:
+                  - entity: sensor.dishwasher_energy_today
+                    name: Zużycie dzisiaj
+                    unit: kWh
+                  - entity: sensor.403100517584028828_bsh_common_status_operationstate
+                    name: Status
+              - entity: switch.1_7
+                type: custom:multiple-entity-row
+                name: Mikrofala
+                state_header: Stan
+                toggle: true
+                state_color: true
+                entities:
+                  - entity: sensor.microwave_socket_daily_consumption
+                    name: Zużycie dzisiaj
+                    unit: kWh
+              - entity: switch.socket_kitchen_monsterek_1
+                type: custom:multiple-entity-row
+                name: Monsterek
+                state_header: Stan
+                toggle: true
+                state_color: true
+                entities:
+                  - entity: sensor.socket_kitchen_monsterek_daily_consumption
+                    name: Zużycie dzisiaj
+                    unit: kWh
+              - entity: counter.water_filters_days
+                type: custom:multiple-entity-row
+                name: Filtr wody używany przez
+                unit: dni
+              - entity: switch.czajnik_setti_kt950w_start
+                type: custom:multiple-entity-row
+                name: Sterowanie
+                state_header: Grzej
+                toggle: true
+                state_color: true
+                entities:
+                  - entity: sensor.setti_kettle_status
+                    name: Stan
+                  - entity: switch.setti_kettle_keep_warm
+                    name: Podgrzewaj
+                    toggle: true
+              - type: custom:fold-entity-row
+                head: water_heater.setti_kettle
+                name: Czajnik 2
+                entities:
+                  - entity: number.setti_kettle_keep_warm_time
+                  - entity: number.setti_kettle_boil_temperature
+                  - entity: number.czajnik_setti_kt950w_temperature_after_boiling_2

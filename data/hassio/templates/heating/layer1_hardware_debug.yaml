@@ -1,0 +1,308 @@
+# ═══════════════════════════════════════════════════════════════
+# WARSTWA 1-2: SPRZĘTOWA (TRV, WThermostat, Fuse, Gaz)
+# ═══════════════════════════════════════════════════════════════
+# ──────────────────────────────────────────────────────────────
+# Rachunek za gaz - Bill Calculator
+# ──────────────────────────────────────────────────────────────
+- binary_sensor:
+    - name: "Rachunek za gaz"
+      unique_id: pgnig_gas_payment_binary_sensor
+      state: >
+        {% set sensor = 'sensor.pgnig_gas_invoice_sensor_8018590365500031980864_7516522' %}
+        {{ state_attr(sensor, 'next_payment_amount_to_pay') | float(0) <= 0 }}
+      attributes:
+        transaction_on: >
+          {{ state_attr('sensor.pgnig_gas_invoice_sensor_8018590365500031980864_7516522', 'next_payment_date') }}
+        currency_amount: >
+          {{ states('sensor.pgnig_gas_invoice_sensor_8018590365500031980864_7516522') }}
+        amount_to_pay: >
+          {{ state_attr('sensor.pgnig_gas_invoice_sensor_8018590365500031980864_7516522', 'next_payment_amount_to_pay') }}
+        currency_name: "PLN"
+        transaction_source: "PGNiG"
+        transaction_readonly: true
+
+# ──────────────────────────────────────────────────────────────
+# Motion Sensor Bedroom Extended - Hardware Presence for Heating
+# ──────────────────────────────────────────────────────────────
+- binary_sensor:
+    - name: "Motion Sensor Bedroom Extended"
+      unique_id: motion_sensor_bedroom_extended
+      device_class: motion
+      state: >
+        {# ═══ Core Sensors ═══ #}
+        {% set presence = is_state('binary_sensor.presence_bedroom_presence', 'on') %}
+        {% set presence_last_changed = states.binary_sensor.presence_bedroom_presence.last_changed %}
+        {% set motion_state = states('sensor.presence_bedroom_motion_state') %}
+        {% set distance = states('sensor.presence_bedroom_target_distance') | float(default=0) %}
+        {% set projector = is_state('binary_sensor.device_bedroom_projector', 'on') %}
+        {% set bed_mode = is_state('input_boolean.bedroom_bed_mode_active', 'on') %}
+        {# ═══ Vibration ═══ #}
+        {% set vib_ts = as_timestamp(states.binary_sensor.vibration_bedroom_bed_vibration.last_changed) | default(0) %}
+        {% set vib_seconds = (as_timestamp(now()) - vib_ts) | int(9999) %}
+        {% set vib_active = is_state('binary_sensor.vibration_bedroom_bed_vibration', 'on') %}
+        {# ═══ Time ═══ #}
+        {% set hour = now().hour %}
+        {% set is_late_evening = hour >= 21 and hour < 23 %}
+        {% set is_night = hour >= 23 or hour < 6 %}
+        {# ═══ Adaptive Score ═══ #}
+        {% set s = namespace(v=0) %}
+        {% if motion_state in ['near', 'large'] %}
+          {% set s.v = s.v + 3 %}
+        {% elif motion_state == 'small' %}
+          {% set s.v = s.v + 2 %}
+        {% endif %}
+        {% if vib_active %}
+          {% set s.v = s.v + 4 %}
+        {% elif vib_seconds < 120 %}
+          {% set s.v = s.v + 3 %}
+        {% elif vib_seconds < 300 %}
+          {% set s.v = s.v + 2 %}
+        {% elif vib_seconds < 600 %}
+          {% set s.v = s.v + 1 %}
+        {% endif %}
+        {% if distance > 0 and distance < 2.0 %}
+          {% set s.v = s.v + 2 %}
+        {% elif distance > 0 and distance < 3.0 %}
+          {% set s.v = s.v + 1 %}
+        {% endif %}
+        {% if projector %}{% set s.v = s.v + 2 %}{% endif %}
+        {% if bed_mode %}{% set s.v = s.v + 2 %}{% endif %}
+        {% if is_night %}{% set s.v = s.v + 1 %}{% endif %}
+        {% set window = 5 if s.v >= 6 else 4 if s.v >= 4 else 3 if s.v >= 2 else 2 %}
+        {% set presence_recent = (presence_last_changed > (now() - timedelta(minutes=window))) and is_state('binary_sensor.presence_bedroom_presence', 'off') %}
+        {% set vib_with_presence = (presence or presence_recent) and vib_seconds < 600 %}
+        {# ═══ Output ═══ #}
+        {% if is_night %}
+          {{ (presence or presence_recent) or projector or bed_mode or (vib_with_presence and vib_seconds < 300) }}
+        {% elif is_late_evening %}
+          {{ (presence or presence_recent) or projector or bed_mode or vib_with_presence or (motion_state in ['near', 'large', 'small'] and distance > 0) }}
+        {% else %}
+          {{ (presence or presence_recent) or projector or bed_mode or (motion_state in ['near', 'large', 'small']) or (motion_state in ['near', 'large'] and distance > 0 and distance < 2.5) }}
+        {% endif %}
+      attributes:
+        debug_score: >
+          {% set s = namespace(v=0) %}
+          {% set motion_state = states('sensor.presence_bedroom_motion_state') %}
+          {% set distance = states('sensor.presence_bedroom_target_distance') | float(default=0) %}
+          {% set vib_ts = as_timestamp(states.binary_sensor.vibration_bedroom_bed_vibration.last_changed) | default(0) %}
+          {% set vib_seconds = (as_timestamp(now()) - vib_ts) | int(9999) %}
+          {% set vib_active = is_state('binary_sensor.vibration_bedroom_bed_vibration', 'on') %}
+          {% if motion_state in ['near', 'large'] %}{% set s.v = s.v + 3 %}
+          {% elif motion_state == 'small' %}{% set s.v = s.v + 2 %}{% endif %}
+          {% if vib_active %}{% set s.v = s.v + 4 %}
+          {% elif vib_seconds < 120 %}{% set s.v = s.v + 3 %}
+          {% elif vib_seconds < 300 %}{% set s.v = s.v + 2 %}
+          {% elif vib_seconds < 600 %}{% set s.v = s.v + 1 %}{% endif %}
+          {% if distance > 0 and distance < 2.0 %}{% set s.v = s.v + 2 %}
+          {% elif distance > 0 and distance < 3.0 %}{% set s.v = s.v + 1 %}{% endif %}
+          {% if is_state('binary_sensor.device_bedroom_projector', 'on') %}{% set s.v = s.v + 2 %}{% endif %}
+          {% if is_state('input_boolean.bedroom_bed_mode_active', 'on') %}{% set s.v = s.v + 2 %}{% endif %}
+          {% if now().hour >= 23 or now().hour < 6 %}{% set s.v = s.v + 1 %}{% endif %}
+          {{ s.v }}
+        debug_window_min: >
+          {% set score = state_attr('binary_sensor.motion_sensor_bedroom_extended', 'debug_score') | int(0) %}
+          {{ 5 if score >= 6 else 4 if score >= 4 else 3 if score >= 2 else 2 }}
+        debug_time_mode: >
+          {% set h = now().hour %}
+          {{ 'night' if (h >= 23 or h < 6) else 'late_evening' if (h >= 21) else 'day' }}
+
+# ──────────────────────────────────────────────────────────────
+# AC Fuse Debug - Hardware Layer
+# ──────────────────────────────────────────────────────────────
+- sensor:
+    - name: "AC Fuse Debug"
+      unique_id: "ac_fuse_debug_sensor"
+      state: >
+        {% set fuse_power = states('sensor.fuse_air_conditioner_power') | float(0) %}
+        {% set fuse_voltage = states('sensor.fuse_air_conditioner_voltage') | float(0) %}
+        {% if fuse_voltage > 200 and fuse_power < 1 %}
+          OFF
+        {% elif fuse_voltage > 200 and fuse_power >= 1 %}
+          ON
+        {% else %}
+          UNKNOWN
+        {% endif %}
+      attributes:
+        # 🔌 Dane z bezpiecznika (Fuse)
+        fuse_power_w: "{{ states('sensor.fuse_air_conditioner_power') | float(0) | round(2) }}"
+        fuse_voltage_v: "{{ states('sensor.fuse_air_conditioner_voltage') | float(0) | round(1) }}"
+        fuse_current_a: "{{ states('sensor.fuse_air_conditioner_current') | float(0) | round(3) }}"
+        fuse_apparent_power_va: "{{ states('sensor.fuse_air_conditioner_apparent_power') | float(0) | round(2) }}"
+        fuse_reactive_power_var: "{{ states('sensor.fuse_air_conditioner_reactive_power') | float(0) | round(2) }}"
+
+        # 🌡️ Środowisko
+        outdoor_temperature_c: "{{ states('sensor.openweathermap_temperature') | float(-999) | round(1) }}"
+        cop_calculated: "{{ (3.5 + (states('sensor.openweathermap_temperature') | float(0) / 10)) | round(2) }}"
+
+        # 💰 Ceny
+        electricity_price_pln_kwh: "{{ states('sensor.pstryk_buy_price_full') | float(0) | round(3) }}"
+        gas_price_pln_kwh: "{{ states('input_number.gas_price') | float(0) | round(3) }}"
+
+        # 📊 Opłacalność
+        ac_heating_economical_percentage: "{{ states('sensor.ac_heating_economical_percentage') | float(0) | round(2) }}"
+        ac_heating_economical_binary: "{{ is_state('binary_sensor.ac_heating_economical', 'on') }}"
+        decision_margin: "{{ (states('sensor.ac_heating_economical_percentage') | float(0) - 100) | round(2) }}"
+
+        # 🎯 Status AC
+        ac_livingroom_thermostat: "{{ states('climate.livingroom_ac_better_thermostat') }}"
+        ac_bedroom_thermostat: "{{ states('climate.bedroom_ac_better_thermostat') }}"
+        heating_demand: "{{ is_state('binary_sensor.heating_demand', 'on') }}"
+
+        # ⏰ Czas
+        last_updated: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+# ──────────────────────────────────────────────────────────────
+# TRV_1 (Salon) - Debug
+# ──────────────────────────────────────────────────────────────
+- sensor:
+    name: "TRV_1 Debug"
+    unique_id: "trv_1_debug_sensor"
+    state: >
+      {% set state = states('climate.trv_1') %}
+      {% set battery = states('binary_sensor.trv_1_battery_low') %}
+      {% set temp = states('sensor.trv_1_local_temperature') %}
+      {% if state == 'unavailable' %}
+        UNAVAILABLE
+      {% elif battery == 'on' %}
+        LOW_BATTERY
+      {% elif temp in ['unknown', 'unavailable'] %}
+        NO_TEMP
+      {% else %}
+        OK
+      {% endif %}
+    attributes:
+      climate_state: "{{ states('climate.trv_1') }}"
+      hvac_action: "{{ state_attr('climate.trv_1', 'hvac_action') }}"
+      temperature: "{{ states('sensor.trv_1_local_temperature') | float(0) | round(1) }}"
+      target_temperature: "{{ state_attr('climate.trv_1', 'temperature') | float(0) | round(1) }}"
+      battery_low: "{{ states('binary_sensor.trv_1_battery_low') }}"
+      battery_level: "{{ state_attr('sensor.trv_1_battery', 'battery_level') | default('N/A') }}"
+      last_changed: "{{ states.climate.trv_1.last_changed }}"
+      area: "Salon"
+      device_type: "TRV"
+      debug_timestamp: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+
+# ──────────────────────────────────────────────────────────────
+# TRV_2 (Salon) - Debug
+# ──────────────────────────────────────────────────────────────
+- sensor:
+    name: "TRV_2 Debug"
+    unique_id: "trv_2_debug_sensor"
+    state: >
+      {% set state = states('climate.trv_2') %}
+      {% set battery = states('binary_sensor.trv_2_battery_low') %}
+      {% set temp = states('sensor.trv_2_local_temperature') %}
+      {% if state == 'unavailable' %}UNAVAILABLE
+      {% elif battery == 'on' %}LOW_BATTERY
+      {% elif temp in ['unknown', 'unavailable'] %}NO_TEMP
+      {% else %}OK{% endif %}
+    attributes:
+      climate_state: "{{ states('climate.trv_2') }}"
+      hvac_action: "{{ state_attr('climate.trv_2', 'hvac_action') }}"
+      temperature: "{{ states('sensor.trv_2_local_temperature') | float(0) | round(1) }}"
+      target_temperature: "{{ state_attr('climate.trv_2', 'temperature') | float(0) | round(1) }}"
+      battery_low: "{{ states('binary_sensor.trv_2_battery_low') }}"
+      area: "Salon"
+      device_type: "TRV"
+
+# ──────────────────────────────────────────────────────────────
+# TRV Bedroom (Sypialnia) - Debug
+# ──────────────────────────────────────────────────────────────
+- sensor:
+    name: "TRV Bedroom Debug"
+    unique_id: "trv_bedroom_debug_sensor"
+    state: >
+      {% set state = states('climate.trv_bedroom') %}
+      {% set battery = states('binary_sensor.trv_bedroom_battery_low') %}
+      {% if state == 'unavailable' %}UNAVAILABLE
+      {% elif battery == 'on' %}LOW_BATTERY
+      {% else %}OK{% endif %}
+    attributes:
+      climate_state: "{{ states('climate.trv_bedroom') }}"
+      hvac_action: "{{ state_attr('climate.trv_bedroom', 'hvac_action') }}"
+      temperature: "{{ states('sensor.trv_bedroom_local_temperature') | float(0) | round(1) }}"
+      target_temperature: "{{ state_attr('climate.trv_bedroom', 'temperature') | float(0) | round(1) }}"
+      battery_low: "{{ states('binary_sensor.trv_bedroom_battery_low') }}"
+      area: "Sypialnia"
+      device_type: "TRV"
+
+# ──────────────────────────────────────────────────────────────
+# TRV Piesek - Debug
+# ──────────────────────────────────────────────────────────────
+- sensor:
+    name: "TRV Piesek Debug"
+    unique_id: "trv_piesek_debug_sensor"
+    state: >
+      {% set state = states('climate.trv_piesek') %}
+      {% set battery = states('binary_sensor.trv_piesek_battery_low') %}
+      {% if state == 'unavailable' %}UNAVAILABLE
+      {% elif battery == 'on' %}LOW_BATTERY
+      {% else %}OK{% endif %}
+    attributes:
+      climate_state: "{{ states('climate.trv_piesek') }}"
+      hvac_action: "{{ state_attr('climate.trv_piesek', 'hvac_action') }}"
+      temperature: "{{ states('sensor.trv_piesek_local_temperature') | float(0) | round(1) }}"
+      target_temperature: "{{ state_attr('climate.trv_piesek', 'temperature') | float(0) | round(1) }}"
+      battery_low: "{{ states('binary_sensor.trv_piesek_battery_low') }}"
+      area: "Piesek"
+      device_type: "TRV"
+
+# ──────────────────────────────────────────────────────────────
+# WThermostat - Debug
+# ──────────────────────────────────────────────────────────────
+- sensor:
+    name: "WThermostat Debug"
+    unique_id: "wthermostat_debug_sensor"
+    state: >
+      {% set state = states('climate.wthermostat') %}
+      {% set demand = states('binary_sensor.heating_demand') %}
+      {% if state == 'unavailable' %}UNAVAILABLE
+      {% elif demand == 'on' %}HEATING
+      {% else %}IDLE{% endif %}
+    attributes:
+      climate_state: "{{ states('climate.wthermostat') }}"
+      hvac_action: "{{ state_attr('climate.wthermostat', 'hvac_action') }}"
+      current_temperature: "{{ state_attr('climate.wthermostat', 'current_temperature') | default(0) | round(1) }}"
+      target_temperature: "{{ state_attr('climate.wthermostat', 'temperature') | default(0) | round(1) }}"
+      heating_demand: "{{ states('binary_sensor.heating_demand') }}"
+      ac_economical_percentage: "{{ states('sensor.ac_heating_economical_percentage') | float(0) | round(1) }}"
+      ac_economical_binary: "{{ states('binary_sensor.ac_heating_economical') }}"
+      area: "Salon"
+      device_type: "WThermostat"
+
+# ──────────────────────────────────────────────────────────────
+# Fuse Air Conditioner - Debug
+# ──────────────────────────────────────────────────────────────
+- sensor:
+    name: "Fuse AC Debug"
+    unique_id: "fuse_ac_debug_sensor"
+    state: >
+      {% set power = states('sensor.fuse_air_conditioner_power') | float(0) %}
+      {% set voltage = states('sensor.fuse_air_conditioner_voltage') | float(0) %}
+      {% if voltage < 200 %}NO_POWER
+      {% elif power > 5 %}ON
+      {% elif power > 0 %}STANDBY
+      {% else %}OFF{% endif %}
+    attributes:
+      power_w: "{{ states('sensor.fuse_air_conditioner_power') | float(0) | round(2) }}"
+      voltage_v: "{{ states('sensor.fuse_air_conditioner_voltage') | float(0) | round(1) }}"
+      current_a: "{{ states('sensor.fuse_air_conditioner_current') | float(0) | round(3) }}"
+      apparent_power_va: "{{ states('sensor.fuse_air_conditioner_apparent_power') | float(0) | round(2) }}"
+      reactive_power_var: "{{ states('sensor.fuse_air_conditioner_reactive_power') | float(0) | round(2) }}"
+      fuse_state: >
+        {% set power = states('sensor.fuse_air_conditioner_power') | float(0) %}
+        {% set voltage = states('sensor.fuse_air_conditioner_voltage') | float(0) %}
+        {% if voltage < 200 %}'no_power'
+        {% elif power > 5 %}'on'
+        {% elif power > 0 %}'standby'
+        {% else %}'off'{% endif %}
+      area: "Korytarz"
+      device_type: "Fuse"
+      issues: >
+        {% set issues = [] %}
+        {% if states('sensor.fuse_air_conditioner_voltage') | float(0) < 200 %}
+          {% set issues = issues + ['voltage_low'] %}
+        {% endif %}
+        {% if states('sensor.fuse_air_conditioner_power') | float(0) > 0 and states('binary_sensor.ac_heating_economical') == 'off' %}
+          {% set issues = issues + ['power_waste'] %}
+        {% endif %}
+        {{ issues if issues else ['none'] }}

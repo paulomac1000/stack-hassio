@@ -1,0 +1,100 @@
+'0x00158d00040bde98':
+  friendly_name: Contact Bedroom
+'0x00158d00042a12c4':
+  friendly_name: Contact Kitchen
+'0x00158d0002752e45':
+  friendly_name: Contact LivingRoom
+'0xa4c138d33aec530d':
+  friendly_name: Motion Sensor Corridor
+'0xa4c1387640627dc9':
+  friendly_name: Drzwi wejściowe
+'0xa4c1381ba45052dd':
+  friendly_name: WaterLeak WC
+'0xa4c138eb04ec7001':
+  friendly_name: TRV_1
+  description: >-
+    Parowanie Zigbee
+
+    1. Wybudzamy głowice klikając w kółko albo kręcąc pokrętłem i przestawiamy
+    na OF
+
+    2. Trzymamy pokrętło przez 5-10 sekund aż zacznie migać dioda zasięgu.
+
+    Gotowe!
+'0xa4c1383082068b33':
+  friendly_name: TempHum Piesek
+  description: '0xa4c1383082068b33'
+'0xa4c13826753b19a4':
+  friendly_name: Light Backyard
+  description: |-
+    Parowanie - przytrzymaj dowolny przycisk 10s
+    0xa4c13826753b19a4
+'0xa4c138f8d2d3a879':
+  friendly_name: TRV_2
+'0xa4c138f8d8d245bf':
+  friendly_name: Motion Sensor Entrance
+'0x70b3d52b6003fd3d':
+  friendly_name: Socket Led Kitchen
+'0xa4c138496d54dbbb':
+  friendly_name: Motion Sensor Kitchen
+  description: '0xa4c138496d54dbbb'
+'0xa4c138bbc733c0b0':
+  friendly_name: TRV Piesek
+  description: '0xa4c138bbc733c0b0'
+'0xa4c1383cad633829':
+  friendly_name: TRV Bedroom
+  description: '0xa4c1383cad633829'
+'0xa4c13805f03ec6a9':
+  friendly_name: Motion Sensor Bedroom
+  description: '0xa4c13805f03ec6a9'
+'0x70b3d52b6003daf5':
+  friendly_name: Socket Led Piesek
+  description: '0x70b3d52b6003daf5'
+'0xa4c1386302542ef9':
+  friendly_name: Contact Piesek Right
+  description: '0xa4c1386302542ef9'
+'0xa4c1382b84a48700':
+  friendly_name: Contact Piesek Left
+  description: '0xa4c1382b84a48700'
+'0xb40ecfd24d940000':
+  friendly_name: Light LivingRoom Left
+'0xa4c138aea6cc7ed2':
+  friendly_name: Motion Sensor Gate
+'0xa4c1380f9f6296e5':
+  friendly_name: TempHum Bedroom
+'0xa4c1380ebe000368':
+  friendly_name: TempHum Bathroom
+'0xa4c138c57fbd2672':
+  friendly_name: Presence LivingRoom
+'0xa81710b823050000':
+  friendly_name: Light LivingRoom Right
+'0xa4c138ed32e0c76d':
+  friendly_name: Button Light Bedroom
+'0xa4c138a8aa1a6f6c':
+  friendly_name: Waterleak Entrance
+'0xa4c138069245a649':
+  friendly_name: Smoke Detector LivingRoom
+'0xa4c138a6e8f064ad':
+  friendly_name: WaterLeak Bathroom
+'0xa4c1382b6a0b3350':
+  friendly_name: Button PC Piesek
+'0xa4c138892b543e13':
+  friendly_name: Button PC Madzia
+'0xa4c1380eee353eca':
+  friendly_name: '0xa4c1380eee353eca'
+'0xa4c138754c8b8423':
+  friendly_name: Vibration Bedroom Bed
+'0x0c4314fffe54b4ac':
+  friendly_name: Socket WC Junkers
+'0xa4c138acde8180c2':
+  friendly_name: '0xa4c138acde8180c2'
+'0xa4c138561ea8bb80':
+  friendly_name: '0xa4c138561ea8bb80'
+'0xa4c138ca28cf3bf6':
+  friendly_name: Presence Stairs
+'0xa4c138d89503753c':
+  friendly_name: Presence Piesek
+'0xa4c1381d20cf2c29':
+  friendly_name: Presence Bedroom
+'0xa4c13812b35e198b':
+  friendly_name: Presence Attic

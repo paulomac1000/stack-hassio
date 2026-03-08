@@ -1,0 +1,34 @@
+{% macro daty_wywozu(type) %}
+
+{% set daty_wywozu = state_attr('sensor.harmonogram_odpadow_json', type) %}
+{{ daty_wywozu | list | default("Brak danych") }}
+
+{% endmacro %}
+
+
+{% macro nastepny_wywoz(type) %}
+
+{% set daty_wywozu = state_attr('sensor.harmonogram_odpadow_json', type) %}
+{% set ns = namespace(namelist=[]) %}
+{% for data_wywozu in daty_wywozu %}
+  {% set date_object = strptime(data_wywozu, "%Y-%m-%d").date() %}
+  {% set ns.namelist = ns.namelist + [date_object]  %}
+{% endfor %}
+{% set nastepny_wywoz = ns.namelist | list | select('>=', (now().date())) | list | first %}
+{{ nastepny_wywoz }}
+
+{% endmacro %}
+
+
+{% macro nastepny_wywoz_dni(type) %}
+
+{% set daty_wywozu = state_attr('sensor.harmonogram_odpadow_json', type) %}
+{% set ns = namespace(namelist=[]) %}
+{% for data_wywozu in daty_wywozu %}
+  {% set date_object = strptime(data_wywozu, "%Y-%m-%d").date() %}
+  {% set ns.namelist = ns.namelist + [date_object]  %}
+{% endfor %}
+{% set nastepny_wywoz = ns.namelist | list | select('>=', (now().date())) | list | first %}
+{{ ((nastepny_wywoz | as_timestamp - now().date() | as_timestamp) | int /60/1440) | round(0) | default('Brak danych') }}
+
+{% endmacro %}

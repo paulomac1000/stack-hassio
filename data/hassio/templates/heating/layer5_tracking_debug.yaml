@@ -1,0 +1,269 @@
+# ═══════════════════════════════════════════════════════════════
+# WARSTWA 5: TRACKING (Person, Device Tracker)
+# ═══════════════════════════════════════════════════════════════
+
+# ──────────────────────────────────────────────────────────────
+# Tracker Paweł Extended Debug
+# ──────────────────────────────────────────────────────────────
+- sensor:
+    - name: "Tracker Paweł Extended Debug"
+      unique_id: "tracker_pawel_extended_debug"
+      icon: mdi:map-marker-account
+      state: >-
+        {%- set DEBOUNCE_LEAVE = 300 %}
+        {%- set WIFI_STABLE_TIME = 120 %}
+        {%- set FRESH_WIFI = 300 %}
+        {%- set FRESH_GPS = 1800 %}
+        {%- set FRESH_TAG = 5400 %}
+        {%- set now_ts = as_timestamp(now()) %}
+        {%- set wifi_obj = states.device_tracker.pablofon_2 %}
+        {%- set wifi_ok = wifi_obj is defined and wifi_obj is not none %}
+        {%- set wifi_st = wifi_obj.state if wifi_ok else 'unavailable' %}
+        {%- set wifi_ts = as_timestamp(wifi_obj.last_updated, 0) if wifi_ok else 0 %}
+        {%- set wifi_chg_ts = as_timestamp(wifi_obj.last_changed, 0) if wifi_ok else 0 %}
+        {%- set wifi_age = (now_ts - wifi_ts) | int %}
+        {%- set wifi_valid = wifi_ok and wifi_st not in ['unknown', 'unavailable'] and wifi_age < FRESH_WIFI %}
+        {%- set wifi_home = wifi_valid and wifi_st == 'home' %}
+        {%- set wifi_stable = wifi_ok and (now_ts - wifi_chg_ts) >= WIFI_STABLE_TIME %}
+        {%- set gps_obj = states.device_tracker.rmx2202 %}
+        {%- set gps_ok = gps_obj is defined and gps_obj is not none %}
+        {%- set gps_st = gps_obj.state if gps_ok else 'unavailable' %}
+        {%- set gps_ts = as_timestamp(gps_obj.last_updated, 0) if gps_ok else 0 %}
+        {%- set gps_valid = gps_ok and gps_st not in ['unknown', 'unavailable'] and (now_ts - gps_ts) < FRESH_GPS %}
+        {%- set portfel_obj = states.device_tracker.portfel_pawel %}
+        {%- set portfel_ok = portfel_obj is defined and portfel_obj is not none %}
+        {%- set portfel_st = portfel_obj.state if portfel_ok else 'unavailable' %}
+        {%- set portfel_time = states('sensor.portfel_pawel_ostatnio_widziany') %}
+        {%- set portfel_ts = as_timestamp(portfel_time, 0) if portfel_time not in ['unknown', 'unavailable', ''] else 0 %}
+        {%- set portfel_valid = portfel_ok and portfel_st not in ['unknown', 'unavailable'] and (now_ts - portfel_ts) < FRESH_TAG %}
+        {%- set klucze_obj = states.device_tracker.klucze_pawel %}
+        {%- set klucze_ok = klucze_obj is defined and klucze_obj is not none %}
+        {%- set klucze_st = klucze_obj.state if klucze_ok else 'unavailable' %}
+        {%- set klucze_time = states('sensor.klucze_pawel_ostatnio_widziany') %}
+        {%- set klucze_ts = as_timestamp(klucze_time, 0) if klucze_time not in ['unknown', 'unavailable', ''] else 0 %}
+        {%- set klucze_valid = klucze_ok and klucze_st not in ['unknown', 'unavailable'] and (now_ts - klucze_ts) < FRESH_TAG %}
+        {%- set home = (wifi_home | int) + (gps_valid and gps_st == 'home') | int + (portfel_valid and portfel_st == 'home') | int + (klucze_valid and klucze_st == 'home') | int %}
+        {%- set away = (wifi_valid and wifi_st != 'home') | int + (gps_valid and gps_st not in ['home', 'unknown', 'unavailable']) | int + (portfel_valid and portfel_st not in ['home', 'unknown', 'unavailable']) | int + (klucze_valid and klucze_st not in ['home', 'unknown', 'unavailable']) | int %}
+        {%- set valid_count = (wifi_valid | int) + (gps_valid | int) + (portfel_valid | int) + (klucze_valid | int) %}
+        {%- set zone = gps_st if gps_valid and gps_st not in ['home', 'not_home', 'unknown', 'unavailable'] else '' %}
+        {%- set prev = this.state if this is defined and this.state is string and this.state not in ['unknown', 'unavailable', 'Nieznana'] else 'W domu' %}
+        {%- set was_home = prev == 'W domu' %}
+        {%- set newest_ts = [wifi_ts, gps_ts, portfel_ts, klucze_ts] | max %}
+        {%- set debounce_passed = (now_ts - newest_ts) >= DEBOUNCE_LEAVE %}
+        {%- if valid_count == 0 %}Nieznana
+        {%- elif zone %}{{ zone }}
+        {%- elif wifi_home and (home >= 2 or wifi_stable) %}W domu
+        {%- elif home > away %}W domu
+        {%- elif away > home %}
+          {%- if was_home and not debounce_passed %}W domu
+          {%- else %}
+            {%- set city = state_attr('device_tracker.rmx2202', 'city') %}
+            {%- set street = state_attr('device_tracker.rmx2202', 'thoroughfare') %}
+            {%- if city == 'Poznań' and street %}{{ street }}
+            {%- elif city %}{{ city }}
+            {%- else %}Poza domem{% endif %}
+          {%- endif %}
+        {%- else %}{{ prev }}{% endif %}
+
+# ──────────────────────────────────────────────────────────────
+# Tracker Magda Extended Debug
+# ──────────────────────────────────────────────────────────────
+- sensor:
+    - name: "Tracker Magda Extended Debug"
+      unique_id: "tracker_magda_extended_debug"
+      icon: mdi:bug-outline
+      unit_of_measurement: "%"
+      state: >-
+        {%- set FRESH_WIFI = 300 %}
+        {%- set FRESH_PERSON_CHG = 7200 %}
+        {%- set FRESH_TAG = 5400 %}
+        {%- set now_ts = as_timestamp(now()) %}
+        {%- set wifi_obj = states.device_tracker.madzikfon %}
+        {%- set wifi_ok = wifi_obj is defined and wifi_obj is not none %}
+        {%- set wifi_ts = as_timestamp(wifi_obj.last_updated, 0) if wifi_ok else 0 %}
+        {%- set wifi_valid = wifi_ok and wifi_obj.state not in ['unknown', 'unavailable'] and (now_ts - wifi_ts) < FRESH_WIFI %}
+        {%- set person_obj = states.person.magda %}
+        {%- set person_ok = person_obj is defined and person_obj is not none %}
+        {%- set person_chg = as_timestamp(person_obj.last_changed, 0) if person_ok else 0 %}
+        {%- set person_valid = person_ok and person_obj.state not in ['unknown', 'unavailable'] and (now_ts - person_chg) < FRESH_PERSON_CHG %}
+        {%- set p_raw = states('sensor.portfel_magda_ostatnio_widziany') %}
+        {%- set p_ts = as_timestamp(p_raw, 0) if p_raw not in ['unknown', 'unavailable', ''] else 0 %}
+        {%- set p_valid = states('device_tracker.portfel_magda') not in ['unknown', 'unavailable'] and p_ts > 0 and (now_ts - p_ts) < FRESH_TAG %}
+        {{ (((wifi_valid|int) + (person_valid|int) + (p_valid|int)) / 3 * 100) | round(0) | int }}
+      attributes:
+        home_votes: >-
+          {{ (states('device_tracker.madzikfon') == 'home') | int +
+             (states('person.magda') == 'home') | int +
+             (states('device_tracker.portfel_magda') == 'home') | int }}
+        away_votes: >-
+          {%- set w = states('device_tracker.madzikfon') %}
+          {%- set p = states('person.magda') %}
+          {%- set t = states('device_tracker.portfel_magda') %}
+          {{ (w not in ['home', 'unknown', 'unavailable']) | int +
+             (p not in ['home', 'unknown', 'unavailable']) | int +
+             (t not in ['home', 'unknown', 'unavailable']) | int }}
+        valid_sources: >-
+          {%- set FRESH_WIFI = 300 %}
+          {%- set FRESH_PERSON_CHG = 7200 %}
+          {%- set FRESH_TAG = 5400 %}
+          {%- set now_ts = as_timestamp(now()) %}
+          {%- set wifi_obj = states.device_tracker.madzikfon %}
+          {%- set wifi_ok = wifi_obj is defined and wifi_obj is not none %}
+          {%- set wifi_ts = as_timestamp(wifi_obj.last_updated, 0) if wifi_ok else 0 %}
+          {%- set wifi_valid = wifi_ok and wifi_obj.state not in ['unknown', 'unavailable'] and (now_ts - wifi_ts) < FRESH_WIFI %}
+          {%- set person_obj = states.person.magda %}
+          {%- set person_ok = person_obj is defined and person_obj is not none %}
+          {%- set person_chg = as_timestamp(person_obj.last_changed, 0) if person_ok else 0 %}
+          {%- set person_valid = person_ok and person_obj.state not in ['unknown', 'unavailable'] and (now_ts - person_chg) < FRESH_PERSON_CHG %}
+          {%- set p_raw = states('sensor.portfel_magda_ostatnio_widziany') %}
+          {%- set p_ts = as_timestamp(p_raw, 0) if p_raw not in ['unknown', 'unavailable', ''] else 0 %}
+          {%- set p_valid = states('device_tracker.portfel_magda') not in ['unknown', 'unavailable'] and p_ts > 0 and (now_ts - p_ts) < FRESH_TAG %}
+          {{ (wifi_valid | int) + (person_valid | int) + (p_valid | int) }}
+        source_used: >-
+          {%- set FRESH_WIFI = 300 %}
+          {%- set FRESH_PERSON_CHG = 7200 %}
+          {%- set FRESH_TAG = 5400 %}
+          {%- set now_ts = as_timestamp(now()) %}
+          {%- set wifi_obj = states.device_tracker.madzikfon %}
+          {%- set wifi_ts = as_timestamp(wifi_obj.last_updated, 0) if wifi_obj is defined and wifi_obj is not none else 0 %}
+          {%- set person_obj = states.person.magda %}
+          {%- set person_chg = as_timestamp(person_obj.last_changed, 0) if person_obj is defined and person_obj is not none else 0 %}
+          {%- set p_raw = states('sensor.portfel_magda_ostatnio_widziany') %}
+          {%- set p_ts = as_timestamp(p_raw, 0) if p_raw not in ['unknown', 'unavailable', ''] else 0 %}
+          {%- set max_ts = [wifi_ts, person_chg, p_ts] | max %}
+          {%- if max_ts == wifi_ts and (now_ts - wifi_ts) < FRESH_WIFI %}wifi
+          {%- elif max_ts == person_chg and (now_ts - person_chg) < FRESH_PERSON_CHG %}person
+          {%- elif max_ts == p_ts and (now_ts - p_ts) < FRESH_TAG %}tag_portfel
+          {%- else %}none{% endif %}
+        wifi_stable: >-
+          {%- set wifi_obj = states.device_tracker.madzikfon %}
+          {%- set wifi_ok = wifi_obj is defined and wifi_obj is not none %}
+          {%- set wifi_chg = as_timestamp(wifi_obj.last_changed, 0) if wifi_ok else 0 %}
+          {{ wifi_ok and (as_timestamp(now()) - wifi_chg) >= 120 }}
+        wifi_state_age_sec: >-
+          {%- set wifi_obj = states.device_tracker.madzikfon %}
+          {%- set wifi_ok = wifi_obj is defined and wifi_obj is not none %}
+          {%- set wifi_chg = as_timestamp(wifi_obj.last_changed, 0) if wifi_ok else 0 %}
+          {{ (as_timestamp(now()) - wifi_chg) | int if wifi_ok else -1 }}
+        forteczna_active: >-
+          {%- set FRESH_GEO_CHG = 7200 %}
+          {%- set now_ts = as_timestamp(now()) %}
+          {%- set geo_obj = states.sensor.iphone_magdalena_geocoded_location %}
+          {%- set geo_ok = geo_obj is defined and geo_obj is not none %}
+          {%- set geo_st = (geo_obj.state | string) if geo_ok else '' %}
+          {%- set geo_chg = as_timestamp(geo_obj.last_changed, 0) if geo_ok else 0 %}
+          {%- set geo_valid = geo_ok and geo_st not in ['unknown', 'unavailable', ''] and (now_ts - geo_chg) < FRESH_GEO_CHG %}
+          {%- set is_forteczna = geo_valid and 'Forteczna' in geo_st %}
+          {%- set nr = (geo_st | regex_findall_index('Forteczna\\s+(\\d+)', 0)) | int(0) if is_forteczna else 0 %}
+          {{ is_forteczna and nr >= 30 and nr <= 49 }}
+        raw_wifi: "{{ states('device_tracker.madzikfon') }}"
+        raw_person: "{{ states('person.magda') }}"
+        raw_portfel: "{{ states('device_tracker.portfel_magda') }}"
+        raw_geocoded: "{{ states('sensor.iphone_magdalena_geocoded_location') }}"
+        wifi_age_min: >-
+          {%- set wifi_obj = states.device_tracker.madzikfon %}
+          {%- set wifi_ok = wifi_obj is defined and wifi_obj is not none %}
+          {%- set wifi_ts = as_timestamp(wifi_obj.last_updated, 0) if wifi_ok else 0 %}
+          {{ ((as_timestamp(now()) - wifi_ts) / 60) | round(1) if wifi_ok else 'unavailable' }}
+        person_change_age_min: >-
+          {%- set person_obj = states.person.magda %}
+          {%- set person_ok = person_obj is defined and person_obj is not none %}
+          {%- set person_chg = as_timestamp(person_obj.last_changed, 0) if person_ok else 0 %}
+          {{ ((as_timestamp(now()) - person_chg) / 60) | round(1) if person_ok else 'unavailable' }}
+        geo_change_age_min: >-
+          {%- set geo_obj = states.sensor.iphone_magdalena_geocoded_location %}
+          {%- set geo_ok = geo_obj is defined and geo_obj is not none %}
+          {%- set geo_chg = as_timestamp(geo_obj.last_changed, 0) if geo_ok else 0 %}
+          {{ ((as_timestamp(now()) - geo_chg) / 60) | round(1) if geo_ok else 'unavailable' }}
+        portfel_age_min: >-
+          {%- set p_raw = states('sensor.portfel_magda_ostatnio_widziany') %}
+          {%- set p_ts = as_timestamp(p_raw, 0) if p_raw not in ['unknown', 'unavailable', ''] else 0 %}
+          {{ ((as_timestamp(now()) - p_ts) / 60) | round(1) if p_ts > 0 else 'unknown' }}
+        threshold_wifi_min: 5
+        threshold_person_change_min: 120
+        threshold_geo_change_min: 120
+        threshold_tag_min: 90
+        threshold_wifi_stable_sec: 120
+        main_sensor_state: "{{ states('sensor.tracker_magda_extended') }}"
+        last_wifi_update: >-
+          {%- set obj = states.device_tracker.madzikfon %}
+          {{ obj.last_updated.isoformat() if obj is defined and obj is not none else 'unavailable' }}
+        last_wifi_change: >-
+          {%- set obj = states.device_tracker.madzikfon %}
+          {{ obj.last_changed.isoformat() if obj is defined and obj is not none else 'unavailable' }}
+        last_person_change: >-
+          {%- set obj = states.person.magda %}
+          {{ obj.last_changed.isoformat() if obj is defined and obj is not none else 'unavailable' }}
+        last_geo_change: >-
+          {%- set obj = states.sensor.iphone_magdalena_geocoded_location %}
+          {{ obj.last_changed.isoformat() if obj is defined and obj is not none else 'unavailable' }}
+        last_portfel_seen: "{{ states('sensor.portfel_magda_ostatnio_widziany') }}"
+- sensor:
+    name: "Heating System Master Debug"
+    unique_id: "heating_system_master_debug_sensor"
+    state: >
+      {% set hardware_ok = states.sensor
+         | selectattr('entity_id', 'search', '_debug_sensor')
+         | selectattr('entity_id', 'search', 'trv_|wthermostat|fuse')
+         | rejectattr('state', 'in', ['OK', 'HEATING', 'IDLE', 'OFF', 'STANDBY'])
+         | list | length %}
+      {% set virtual_ok = states.sensor
+         | selectattr('entity_id', 'search', 'bt_.*_debug_sensor')
+         | rejectattr('state', 'in', ['HEATING', 'IDLE', 'COOLING'])
+         | list | length %}
+      {% if hardware_ok > 0 or virtual_ok > 0 %}ISSUES_DETECTED
+      {% else %}HEALTHY{% endif %}
+    attributes:
+      # Warstwa 1-2: Sprzęt
+      trv_1_status: "{{ states('sensor.trv_1_debug') }}"
+      trv_2_status: "{{ states('sensor.trv_2_debug') }}"
+      trv_bedroom_status: "{{ states('sensor.trv_bedroom_debug') }}"
+      trv_piesek_status: "{{ states('sensor.trv_piesek_debug') }}"
+      wthermostat_status: "{{ states('sensor.wthermostat_debug') }}"
+      fuse_ac_status: "{{ states('sensor.fuse_ac_debug') }}"
+
+      # Warstwa 3: Wirtualna
+      bt_livingroom_main_status: "{{ states('sensor.bt_livingroom_main_debug') }}"
+      bt_livingroom_entrance_status: "{{ states('sensor.bt_livingroom_entrance_debug') }}"
+      bt_bedroom_status: "{{ states('sensor.bt_bedroom_debug') }}"
+      bt_bedroom_ac_status: "{{ states('sensor.bt_bedroom_ac_debug') }}"
+      bt_livingroom_ac_status: "{{ states('sensor.bt_livingroom_ac_debug') }}"
+      bt_piesek_status: "{{ states('sensor.bt_piesek_debug') }}"
+
+      # Warstwa 4: Logika
+      heating_control_v5_status: "{{ states('sensor.heating_control_v5_summary') }}"
+      watchdog_status: "{{ states('sensor.heating_watchdog_status') }}"
+      heating_demand: "{{ states('binary_sensor.heating_demand') }}"
+      ac_power_manager_status: "{{ states('sensor.ac_power_manager_debug') }}"
+      seasonal_mode: "{{ states('sensor.seasonal_modes_debug') }}"
+
+      # Warstwa 5: Decyzje
+      energy_price_status: "{{ states('sensor.energy_price_debug') }}"
+      ac_vs_gas_status: "{{ states('sensor.ac_vs_gas_economics_debug') }}"
+      gas_bill_status: "{{ states('sensor.gas_bill_debug') }}"
+      energy_ai_pack_status: "{{ states('sensor.energy_ai_pack_status') }}"
+      weather_ai_pack_status: "{{ states('sensor.weather_ai_pack_status') }}"
+
+      # Summary
+      total_debug_sensors: 19
+      unavailable_count: >
+        {% set count = 0 %}
+        {% for sensor in [
+          'sensor.trv_1_debug', 'sensor.trv_2_debug', 'sensor.trv_bedroom_debug',
+          'sensor.trv_piesek_debug', 'sensor.wthermostat_debug', 'sensor.fuse_ac_debug',
+          'sensor.bt_livingroom_main_debug', 'sensor.bt_livingroom_entrance_debug',
+          'sensor.bt_bedroom_debug', 'sensor.bt_bedroom_ac_debug',
+          'sensor.bt_livingroom_ac_debug', 'sensor.bt_piesek_debug',
+          'sensor.heating_control_v5_summary', 'sensor.heating_watchdog_status',
+          'sensor.ac_power_manager_debug', 'sensor.seasonal_modes_debug',
+          'sensor.energy_price_debug', 'sensor.ac_vs_gas_economics_debug',
+          'sensor.gas_bill_debug', 'sensor.energy_ai_pack_status',
+          'sensor.weather_ai_pack_status'
+        ] %}
+          {% if states(sensor) in ['unknown', 'unavailable'] %}
+            {% set count = count + 1 %}
+          {% endif %}
+        {% endfor %}
+        {{ count }}
+      last_updated: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+      debug_version: "1.0.0"

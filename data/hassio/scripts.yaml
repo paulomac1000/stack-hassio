@@ -1,0 +1,998 @@
+speakers_in_use:
+  alias: Determine whether to turn the speakers on or off
+  description: Włącza/wyłącza głośniki Fenda na podstawie aktywności źródeł dźwięku.
+  mode: single
+  sequence:
+  - variables:
+      tv_playing: '{{ is_state(''binary_sensor.tv_enabled'', ''on'') }}'
+      ma_salon_playing: '{{ is_state(''media_player.salon'', ''playing'') }}'
+      ma_terminal_playing: '{{ is_state(''media_player.terminal'', ''playing'') }}'
+      ma_chromacast_playing: '{{ is_state(''media_player.chromacast_2'', ''playing'')
+        }}'
+      ma_android_playing: '{{ is_state(''media_player.android_1cff7134d196a36c'',
+        ''playing'') }}'
+      snapcast_terminal_playing: '{{ is_state(''media_player.terminal_snapcast_client'',
+        ''playing'') }}'
+      chromecast_playing: '{{ is_state(''media_player.chromecast'', ''playing'') }}'
+      audio_active: "{{ tv_playing\n   or ma_salon_playing\n   or ma_terminal_playing\n
+        \  or ma_chromacast_playing\n   or ma_android_playing\n   or snapcast_terminal_playing\n
+        \  or chromecast_playing }}\n"
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{ audio_active }}'
+      sequence:
+      - target:
+          entity_id: input_boolean.device_livingroom_speakers
+        action: input_boolean.turn_on
+    default:
+    - target:
+        entity_id: input_boolean.device_livingroom_speakers
+      action: input_boolean.turn_off
+led_light:
+  alias: Led Light +
+  sequence:
+  - service: remote.send_command
+    data:
+      num_repeats: 1
+      delay_secs: 0.4
+      hold_secs: 0
+      command: Light +
+      device: Led
+    target:
+      entity_id: remote.rm4c_mini
+  mode: single
+led_light_2:
+  alias: Led Light -
+  sequence:
+  - service: remote.send_command
+    data:
+      num_repeats: 1
+      delay_secs: 0.4
+      hold_secs: 0
+      command: Light -
+      device: Led
+    target:
+      entity_id: remote.rm4c_mini
+  mode: single
+speakers_volume:
+  alias: Speakers volume +
+  sequence:
+  - service: remote.send_command
+    data:
+      num_repeats: 1
+      delay_secs: 0.4
+      hold_secs: 0
+      command: Volume +
+      device: Fenda F3800X
+    target:
+      entity_id: remote.rm4c_mini
+  mode: single
+speakers_volume_2:
+  alias: Speakers volume -
+  sequence:
+  - service: remote.send_command
+    data:
+      num_repeats: 1
+      delay_secs: 0.4
+      hold_secs: 0
+      command: Volume -
+      device: Fenda F3800X
+    target:
+      entity_id: remote.rm4c_mini
+  mode: single
+tv_hdmi_1:
+  alias: Tv HDMI 1
+  sequence:
+  - service: media_player.select_source
+    data:
+      source: HDMI 1
+    target:
+      device_id: aa8e78f0e722bae0708f14e2759271f0
+  mode: single
+  icon: mdi:power-plug
+tv_hdmi_2:
+  alias: Tv HDMI 2
+  sequence:
+  - service: media_player.select_source
+    data:
+      source: HDMI 2
+    target:
+      device_id: aa8e78f0e722bae0708f14e2759271f0
+  mode: single
+  icon: mdi:power-plug
+tv_hdmi_3:
+  alias: Tv HDMI 3
+  sequence:
+  - service: media_player.select_source
+    data:
+      source: HDMI 3
+    target:
+      device_id: aa8e78f0e722bae0708f14e2759271f0
+  mode: single
+  icon: mdi:power-plug
+tv_power:
+  alias: Tv power
+  sequence:
+  - service: remote.send_command
+    metadata: {}
+    data:
+      num_repeats: 1
+      delay_secs: 0.4
+      hold_secs: 0
+      command: Power
+      device: LG webOS Smart TV
+    target:
+      entity_id: remote.rm4c_mini
+  mode: single
+  icon: mdi:television-classic
+speakers_mute_switch:
+  alias: Speakers mute switch
+  sequence:
+  - service: remote.send_command
+    data:
+      num_repeats: 1
+      delay_secs: 0.4
+      hold_secs: 0
+      command: Mute
+      device: Fenda F3800X
+    target:
+      entity_id: remote.rm4c_mini
+  mode: single
+switch_yard_gate_lock:
+  alias: Switch Yard Gate Lock
+  sequence:
+  - type: turn_on
+    device_id: 4ca2f28933ebef6960b0a38780a931a3
+    entity_id: d27d92a800170971b830372ecb42686c
+    domain: switch
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 3
+      milliseconds: 0
+  - type: turn_off
+    device_id: 4ca2f28933ebef6960b0a38780a931a3
+    entity_id: d27d92a800170971b830372ecb42686c
+    domain: switch
+  mode: single
+switch_entry_gate_lock:
+  alias: Switch Entry Gate Lock
+  sequence:
+  - action: lock.unlock
+    metadata: {}
+    data: {}
+    target:
+      entity_id: lock.security_camera_operate_lock
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 5
+      milliseconds: 0
+  - action: lock.lock
+    metadata: {}
+    data: {}
+    target:
+      entity_id: lock.security_camera_operate_lock
+  mode: single
+thermostat_piesek_increase:
+  alias: thermostat_piesek_increase
+  sequence:
+  - action: input_number.set_value
+    data_template:
+      entity_id: input_number.thermostat_piesek_virtual
+      value: '{{ states(''input_number.thermostat_piesek_virtual'') | float(0) + 0.5
+        }}'
+  description: ''
+adjust_input_number_value:
+  alias: Adjust Input Number Value
+  description: Changes the value of an input_number by a specified delta (+/-)
+  fields:
+    entity_id:
+      description: The input_number entity to adjust
+      example: input_number.thermostat_piesek_virtual
+      required: true
+    value:
+      description: Delta value to add/subtract (e.g., 0.5 or -0.5)
+      example: -0.5
+      default: 0.5
+  mode: single
+  sequence:
+  - data_template:
+      entity_id: '{{ entity_id }}'
+      value: '{{ (states(entity_id) | float(0)) + (value | float(0)) }}'
+    action: input_number.set_value
+turn_on_kitchen_light:
+  sequence:
+  - action: light.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: light.triones_40062d00177dc
+  - target:
+      entity_id:
+      - light.led_kitchen_light
+      - light.led_szafka_brw
+      - light.triones_40062d00177dc
+    data:
+      rgb_color: "{% set t = now().hour * 60 + now().minute %} {# Definicja punktów
+        czasowych (w minutach od północy): #} {% set T1 = 6 * 60 %}    {# 06:00 #}
+        {% set T2 = 9 * 60 %}    {# 09:00 #} {% set T3 = 12 * 60 %}   {# 12:00 #}
+        {% set T4 = 15 * 60 %}   {# 15:00 #} {% set T5 = 18 * 60 %}   {# 18:00 #}
+        {% set T6 = 21 * 60 %}   {# 21:00 #} {% set T7 = 6 * 60 + 1440 %}  {# 06:00
+        następnego dnia #}\n{# Definicja kolorów #} {% set white      = (255, 255,
+        255) %} {% set light_yellow = (255, 255, 224) %} {% set yellow     = (255,
+        255, 0) %} {% set orange     = (255, 165, 0) %} {% set blue       = (0, 191,
+        255) %} {% set purple     = (128, 0, 128) %}\n{# Wybór przedziału i obliczenie
+        współczynnika interpolacji #} {% if t >= T1 and t < T2 %}\n  {# Przejście:
+        white -> light_yellow #}\n  {% set factor = (t - T1) / (T2 - T1) %}\n  {%
+        set r = white[0] + factor * (light_yellow[0] - white[0]) %}\n  {% set g =
+        white[1] + factor * (light_yellow[1] - white[1]) %}\n  {% set b = white[2]
+        + factor * (light_yellow[2] - white[2]) %}\n{% elif t >= T2 and t < T3 %}\n
+        \ {# Przejście: light_yellow -> yellow #}\n  {% set factor = (t - T2) / (T3
+        - T2) %}\n  {% set r = light_yellow[0] + factor * (yellow[0] - light_yellow[0])
+        %}\n  {% set g = light_yellow[1] + factor * (yellow[1] - light_yellow[1])
+        %}\n  {% set b = light_yellow[2] + factor * (yellow[2] - light_yellow[2])
+        %}\n{% elif t >= T3 and t < T4 %}\n  {# Przejście: yellow -> orange #}\n  {%
+        set factor = (t - T3) / (T4 - T3) %}\n  {% set r = yellow[0] + factor * (orange[0]
+        - yellow[0]) %}\n  {% set g = yellow[1] + factor * (orange[1] - yellow[1])
+        %}\n  {% set b = yellow[2] + factor * (orange[2] - yellow[2]) %}\n{% elif
+        t >= T4 and t < T5 %}\n  {# Przejście: orange -> blue #}\n  {% set factor
+        = (t - T4) / (T5 - T4) %}\n  {% set r = orange[0] + factor * (blue[0] - orange[0])
+        %}\n  {% set g = orange[1] + factor * (blue[1] - orange[1]) %}\n  {% set b
+        = orange[2] + factor * (blue[2] - orange[2]) %}\n{% elif t >= T5 and t < T6
+        %}\n  {# Przejście: blue -> purple #}\n  {% set factor = (t - T5) / (T6 -
+        T5) %}\n  {% set r = blue[0] + factor * (purple[0] - blue[0]) %}\n  {% set
+        g = blue[1] + factor * (purple[1] - blue[1]) %}\n  {% set b = blue[2] + factor
+        * (purple[2] - blue[2]) %}\n{% else %}\n  {# Przejście: purple -> white (dla
+        t >= 21:00 oraz dla t < 06:00) #}\n  {% if t < T1 %}\n    {% set t_adj = t
+        + 1440 %}\n  {% else %}\n    {% set t_adj = t %}\n  {% endif %}\n  {% set
+        factor = (t_adj - T6) / (T7 - T6) %}\n  {% set r = purple[0] + factor * (white[0]
+        - purple[0]) %}\n  {% set g = purple[1] + factor * (white[1] - purple[1])
+        %}\n  {% set b = purple[2] + factor * (white[2] - purple[2]) %}\n{% endif
+        %} [{{ r | round }}, {{ g | round }}, {{ b | round }}]\n"
+    action: light.turn_on
+  alias: Turn on kitchen Light
+  description: ''
+universal_notifier:
+  alias: Universal Notifier
+  mode: parallel
+  fields:
+    title:
+      description: The title of the notification.
+      example: Motion detected
+      required: true
+    message:
+      description: The content for push notifications and the text for TTS.
+      required: true
+    image_path:
+      description: Optional local path to an image file.
+      required: false
+      example: /local/cameras/front_door.jpg
+    source:
+      description: Name of the automation/source calling this script.
+      required: false
+      example: motion_front_door
+    use_tts:
+      description: If true, play as TTS.
+      required: false
+      default: false
+    phone_pawel:
+      description: Send to Paweł.
+      required: false
+      default: false
+    phone_magdalena:
+      description: Send to Magdalena.
+      required: false
+      default: false
+    use_pushbullet:
+      description: Send via Pushbullet.
+      required: false
+      default: false
+    use_awtrix:
+      description: Send to Awtrix.
+      required: false
+      default: false
+  sequence:
+  - variables:
+      img_ts: '{{ as_timestamp(now()) | string }}'
+      tts_text: '{{ (message if use_tts | default(false) else '''') | string | truncate(500,
+        True, ''...'') }}'
+      log_ts: '{{ now().isoformat() }}'
+      log_source: '{{ source | default(''unknown'') | trim }}'
+      log_msg: '{{ message | string | regex_replace(''[\n\r]+'', '' '') | truncate(1000,
+        True, ''...'') | trim }}'
+      log_title: '{{ title | string | regex_replace(''[\n\r]+'', '' '') | trim }}'
+      android_data: '{% if image_path is defined and image_path != '''' %} {{ {"image":
+        image_path ~ "?" ~ img_ts} }} {% else %} {{ {} }} {% endif %}'
+      ios_data: '{% if image_path is defined and image_path != '''' %} {{ {"attachment":
+        {"url": "https://hassio.cleverdevelopment.pl" ~ image_path ~ "?" ~ img_ts}}
+        }} {% else %} {{ {} }} {% endif %}'
+  - action: notify.send_message
+    target:
+      entity_id: notify.notification_file_log
+    data:
+      message: '[{{ log_ts }}] [{{ log_source }}] [{{ log_title }}]: {{ log_msg }}'
+  - event: notification_sent
+    event_data:
+      timestamp: '{{ log_ts }}'
+      source: '{{ log_source }}'
+      title: '{{ title }}'
+      message: '{{ message }}'
+      image_path: '{{ image_path | default(none) }}'
+      targets:
+        phone_pawel: '{{ phone_pawel | default(false) }}'
+        phone_magdalena: '{{ phone_magdalena | default(false) }}'
+        tts: '{{ use_tts | default(false) }}'
+        pushbullet: '{{ use_pushbullet | default(false) }}'
+        awtrix: '{{ use_awtrix | default(false) }}'
+  - if:
+    - condition: template
+      value_template: '{{ phone_pawel | default(false) }}'
+    then:
+    - action: notify.mobile_app_rmx2202
+      data:
+        title: '{{ title }}'
+        message: '{{ message }}'
+        data: '{{ android_data }}'
+  - if:
+    - condition: template
+      value_template: '{{ phone_magdalena | default(false) }}'
+    then:
+    - action: notify.mobile_app_iphone_magdalena
+      data:
+        title: '{{ title }}'
+        message: '{{ message }}'
+        data: '{{ ios_data }}'
+  - if:
+    - condition: template
+      value_template: '{{ use_tts | default(false) and tts_text | length > 2 }}'
+    then:
+    - parallel:
+      - if:
+        - condition: state
+          entity_id: input_boolean.mute_bedroom_audio
+          state: 'off'
+        - condition: state
+          entity_id: binary_sensor.can_play_bedroom_audio
+          state: 'on'
+        then:
+        - action: tts.speak
+          target:
+            entity_id: tts.google_ai_tts
+          data:
+            media_player_entity_id: media_player.lenovo_cd_4n341y7990
+            message: '{{ tts_text }}'
+            cache: true
+            language: pl-PL
+          continue_on_error: true
+      - if:
+        - condition: state
+          entity_id: input_boolean.mute_livingroom_audio
+          state: 'off'
+        - condition: state
+          entity_id: binary_sensor.can_play_livingroom_audio
+          state: 'on'
+        then:
+        - action: tts.speak
+          target:
+            entity_id: tts.google_ai_tts
+          data:
+            media_player_entity_id: media_player.googlehome0122
+            message: '{{ tts_text }}'
+            cache: true
+            language: pl-PL
+          continue_on_error: true
+      - if:
+        - condition: state
+          entity_id: input_boolean.mute_piesek_audio
+          state: 'off'
+        - condition: state
+          entity_id: binary_sensor.can_play_piesek_audio
+          state: 'on'
+        then:
+        - action: tts.speak
+          target:
+            entity_id: tts.google_ai_tts
+          data:
+            media_player_entity_id: media_player.googlehome8204
+            message: '{{ tts_text }}'
+            cache: true
+            language: pl-PL
+          continue_on_error: true
+  - if:
+    - condition: template
+      value_template: '{{ use_pushbullet | default(false) }}'
+    then:
+    - choose:
+      - conditions:
+        - condition: template
+          value_template: '{{ image_path is defined and image_path != '''' }}'
+        sequence:
+        - action: notify.pushbullet
+          data:
+            title: '{{ title }}'
+            message: '{{ message }}'
+            data:
+              file: '{{ image_path | replace(''/local/'', ''/config/www/'') }}'
+      default:
+      - action: notify.pushbullet
+        data:
+          title: '{{ title }}'
+          message: '{{ message }}'
+  - if:
+    - condition: template
+      value_template: '{{ use_awtrix | default(false) }}'
+    then:
+    - action: awtrix.notification
+      data:
+        data:
+          text: '{{ message }}'
+          icon: warning
+          pushIcon: true
+          duration: 5
+          hold: false
+          repeat: 1
+          lifetime: 5
+weather_ai_pack_generator:
+  alias: Weather AI Pack Generator
+  description: Generuje teksty pogodowe w jednym wywołaniu AI.
+  mode: single
+  max_exceeded: silent
+  fields:
+    force_regenerate:
+      name: Force Regenerate
+      required: false
+      default: false
+      selector:
+        boolean:
+    dry_run:
+      name: Dry Run
+      required: false
+      default: false
+      selector:
+        boolean:
+  sequence:
+  - alias: Check weather entity availability
+    if:
+    - condition: template
+      value_template: '{{ states(''weather.dom'') in [''unknown'', ''unavailable'']
+        }}'
+    then:
+    - action: persistent_notification.create
+      data:
+        title: ⚠️ Weather AI Pack
+        message: Encja weather.dom niedostępna
+        notification_id: weather_ai_error
+    - stop: Weather entity unavailable
+  - alias: Fetch Daily Forecast
+    action: weather.get_forecasts
+    target:
+      entity_id: weather.dom
+    data:
+      type: daily
+    response_variable: daily_response
+    continue_on_error: true
+  - alias: Fetch Hourly Forecast
+    action: weather.get_forecasts
+    target:
+      entity_id: weather.dom
+    data:
+      type: hourly
+    response_variable: hourly_response
+    continue_on_error: true
+  - alias: Calculate all variables with null safety
+    variables:
+      forecast_list: '{% set empty = [] %} {% if daily_response is not defined %}{{
+        empty }} {% elif daily_response is not mapping %}{{ empty }} {% elif daily_response.get(''weather.dom'')
+        is none %}{{ empty }} {% elif daily_response.get(''weather.dom'').get(''forecast'')
+        is none %}{{ empty }} {% else %}{{ daily_response.get(''weather.dom'').get(''forecast'')
+        | list }}{% endif %}
+
+        '
+      has_data: '{{ forecast_list is iterable and forecast_list | list | length >=
+        2 }}'
+      f_today_raw: '{{ forecast_list[0] if has_data else {} }}'
+      f_tmrw_raw: '{{ forecast_list[1] if has_data else {} }}'
+      today_condition: '{{ f_today_raw.condition | default(''unknown'') }}'
+      today_temp_max: '{{ f_today_raw.temperature | default(15) | float(15) }}'
+      today_temp_min: '{{ f_today_raw.templow | default(10) | float(10) }}'
+      today_precip: '{{ f_today_raw.precipitation | default(0) | float(0) }}'
+      today_wind: '{{ f_today_raw.wind_speed | default(0) | float(0) }}'
+      today_wind_bearing: '{{ f_today_raw.wind_bearing | default(0) | int(0) }}'
+      tmrw_condition: '{{ f_tmrw_raw.condition | default(''unknown'') }}'
+      tmrw_temp_max: '{{ f_tmrw_raw.temperature | default(15) | float(15) }}'
+      tmrw_temp_min: '{{ f_tmrw_raw.templow | default(10) | float(10) }}'
+      tmrw_precip: '{{ f_tmrw_raw.precipitation | default(0) | float(0) }}'
+      current_cond: '{{ states(''weather.dom'') | default(''unknown'') }}'
+      pm25_raw: '{{ states(''sensor.dom_pm2_5'') | int(0) }}'
+      smog_bucket: '{% if pm25_raw | int(0) < 25 %}DOBRE{% elif pm25_raw | int(0)
+        < 50 %}UMIARKOWANE{% else %}ZŁE{% endif %}'
+      is_smog: '{{ pm25_raw | int(0) > 25 }}'
+      wind_dir: '{% set b = today_wind_bearing | int(0) %} {% if b >= 337 or b < 23
+        %}N{% elif b < 68 %}NE{% elif b < 113 %}E{% elif b < 158 %}SE{% elif b < 203
+        %}S{% elif b < 248 %}SW{% elif b < 293 %}W{% else %}NW{% endif %}
+
+        '
+      trend_temp: '{% set d = (tmrw_temp_max | float(15) - today_temp_max | float(15))
+        | round(0) %} {% if d > 3 %}cieplej o {{ d }}°{% elif d < -3 %}chłodniej o
+        {{ d | abs }}°{% else %}stabilnie{% endif %}
+
+        '
+      meteo_active: '{{ is_state(''binary_sensor.meteoalarm'', ''on'') }}'
+      meteo_event: '{{ (state_attr(''binary_sensor.meteoalarm'', ''Event'') | default('''',
+        true))[:80] | replace(''<'', '''') | replace(''>'', '''') }}'
+      meteo_instr: '{{ (state_attr(''binary_sensor.meteoalarm'', ''Instruction'')
+        | default('''', true))[:150] | replace(''<'', '''') | replace(''>'', '''')
+        }}'
+      hydro_alert_raw: '{{ states(''sensor.warta_poznan_most_rocha_alert_hydrologiczny'')
+        | default(''brak'', true) }}'
+      hydro_alert: '{{ hydro_alert_raw if hydro_alert_raw not in [''unknown'', ''unavailable'',
+        ''None'', '''', none] else ''brak'' }}'
+      hydro_level: '{{ states(''sensor.warta_poznan_most_rocha_poziom_wody'') | default('''',
+        true) }}'
+      hydro_active: '{{ hydro_alert not in [''brak'', ''unknown'', ''unavailable'',
+        ''''] }}'
+      current_fingerprint: '{{ [current_cond, today_condition, today_temp_max | round(0),
+        tmrw_temp_max | round(0), ''M'' if meteo_active else '''', smog_bucket[:1]]
+        | join(''|'') }}'
+      prev_fingerprint: '{{ states(''input_text.weather_ai_pack_fingerprint'') | default('''',
+        true) }}'
+      cache_age: '{{ states(''sensor.weather_ai_pack_age_minutes'') | int(9999) }}'
+      should_regenerate: '{{ (force_regenerate | default(false)) == true or current_fingerprint
+        != prev_fingerprint or cache_age > 720 }}'
+  - alias: Check forecast data exists
+    if:
+    - condition: template
+      value_template: '{{ not has_data }}'
+    then:
+    - action: persistent_notification.create
+      data:
+        title: ⚠️ Weather AI Pack
+        message: Brak danych prognozy (forecast_list pusta lub za krótka). Spróbuj
+          później.
+        notification_id: weather_ai_no_data
+    - stop: No forecast data
+  - alias: Check if regeneration needed
+    if:
+    - condition: template
+      value_template: '{{ not should_regenerate and (dry_run | default(false)) !=
+        true }}'
+    then:
+    - stop: Fingerprint unchanged - skipping AI call
+  - alias: Build AI prompt
+    variables:
+      mega_prompt: 'Wygeneruj 9 sekcji pogodowych. Każda zaczyna się separatorem ###NAZWA###
+        w osobnej linii. ZASADY: Tylko tekst, bez Markdown (bez gwiazdek ** i __).
+        Dashboard bez "teraz X°C".
+
+        DANE: Dziś: {{ today_condition }}, {{ today_temp_max | round(0) }}/{{ today_temp_min
+        | round(0) }}°C, {{ today_precip | round(0) }}mm, wiatr {{ today_wind | round(0)
+        }}km/h {{ wind_dir }} Jutro: {{ tmrw_condition }}, {{ tmrw_temp_max | round(0)
+        }}/{{ tmrw_temp_min | round(0) }}°C, {{ tmrw_precip | round(0) }}mm Trend:
+        {{ trend_temp }} Powietrze: {{ smog_bucket }}{% if is_smog %} (smog!){% endif
+        %} {% if meteo_active %}METEOALARM: {{ meteo_event }}{% endif %} {% if hydro_active
+        %}HYDRO: {{ hydro_alert }}{% endif %}
+
+        ###DASHBOARD_TODAY### 2 zdania o dziś, emotikony OK, max 120 zn. ###DASHBOARD_NIGHT###
+        1 zdanie o nocy, max 80 zn. ###DASHBOARD_TOMORROW### 2 zdania o jutrze, max
+        120 zn. ###MORNING_TTS### Poranek radiowy, liczby SŁOWNIE, max 300 zn. ###MORNING_PAWEL###
+        Checklista, CYFRY OK, max 150 zn. ###MORNING_MAGDA### Porady ubiorowe, CYFRY,
+        max 150 zn. ###EVENING_TTS### Wieczór o jutrze, SŁOWNIE, max 300 zn. ###EVENING_PAWEL###
+        Jutro, CYFRY, max 150 zn. ###EVENING_MAGDA### Plan ubioru, CYFRY, max 150
+        zn.
+
+        '
+  - alias: Call AI
+    action: conversation.process
+    data:
+      text: '{{ mega_prompt }}'
+      agent_id: conversation.google_ai_conversation
+    response_variable: ai_result
+    continue_on_error: true
+  - alias: Parse AI response
+    variables:
+      raw_text_dirty: "{% if ai_result is defined and ai_result is mapping %}\n  {%
+        set resp = ai_result.get('response') %}\n  {% if resp is mapping %}\n    {%
+        set speech = resp.get('speech') %}\n    {% if speech is mapping %}\n      {%
+        set plain = speech.get('plain') %}\n      {% if plain is mapping %}\n        {{
+        plain.get('speech', '') }}\n      {% else %}{{ '' }}{% endif %}\n    {% else
+        %}{{ '' }}{% endif %}\n  {% else %}{{ '' }}{% endif %}\n{% else %}{{ '' }}{%
+        endif %}\n"
+      raw_text: '{{ raw_text_dirty | replace(''***'', '''') | replace(''**'', '''')
+        | replace(''__'', '''') | replace(''`'', '''') }}'
+      has_all_sections: "{{ '###DASHBOARD_TODAY###' in raw_text \n   and '###DASHBOARD_NIGHT###'
+        in raw_text\n   and '###DASHBOARD_TOMORROW###' in raw_text\n   and '###MORNING_TTS###'
+        in raw_text\n   and '###MORNING_PAWEL###' in raw_text\n   and '###MORNING_MAGDA###'
+        in raw_text\n   and '###EVENING_TTS###' in raw_text\n   and '###EVENING_PAWEL###'
+        in raw_text\n   and '###EVENING_MAGDA###' in raw_text }}\n"
+      is_valid: '{{ has_all_sections and raw_text | length > 100 }}'
+      sect_dashboard_today: '{% if is_valid %}{{ raw_text.split(''###DASHBOARD_TODAY###'')[1].split(''###'')[0]
+        | trim | truncate(200) }}{% else %}Dane niedostępne.{% endif %}'
+      sect_dashboard_night: '{% if is_valid %}{{ raw_text.split(''###DASHBOARD_NIGHT###'')[1].split(''###'')[0]
+        | trim | truncate(150) }}{% else %}Sprawdź później.{% endif %}'
+      sect_dashboard_tomorrow: '{% if is_valid %}{{ raw_text.split(''###DASHBOARD_TOMORROW###'')[1].split(''###'')[0]
+        | trim | truncate(200) }}{% else %}Prognoza niedostępna.{% endif %}'
+      sect_morning_tts: '{% if is_valid %}{{ raw_text.split(''###MORNING_TTS###'')[1].split(''###'')[0]
+        | trim | truncate(400) }}{% else %}Dzień dobry!{% endif %}'
+      sect_morning_pawel: '{% if is_valid %}{{ raw_text.split(''###MORNING_PAWEL###'')[1].split(''###'')[0]
+        | trim | truncate(250) }}{% else %}Cache niedostępny{% endif %}'
+      sect_morning_magda: '{% if is_valid %}{{ raw_text.split(''###MORNING_MAGDA###'')[1].split(''###'')[0]
+        | trim | truncate(250) }}{% else %}Cache niedostępny{% endif %}'
+      sect_evening_tts: '{% if is_valid %}{{ raw_text.split(''###EVENING_TTS###'')[1].split(''###'')[0]
+        | trim | truncate(400) }}{% else %}Dobry wieczór!{% endif %}'
+      sect_evening_pawel: '{% if is_valid %}{{ raw_text.split(''###EVENING_PAWEL###'')[1].split(''###'')[0]
+        | trim | truncate(250) }}{% else %}Cache niedostępny{% endif %}'
+      sect_evening_magda: '{% if is_valid %}{{ raw_text.split(''###EVENING_MAGDA###'')[1].split(''###'')[0]
+        | trim | truncate(250) }}{% else %}Cache niedostępny{% endif %}'
+      debug_msg: 'Valid: {{ is_valid }} | Sections: {{ has_all_sections }} | Len:
+        {{ raw_text | length }}'
+  - alias: Handle dry run mode
+    if:
+    - condition: template
+      value_template: '{{ (dry_run | default(false)) == true }}'
+    then:
+    - action: persistent_notification.create
+      data:
+        title: "\U0001F9EA AI-Pack Dry Run"
+        message: "{{ debug_msg }}\n\n\U0001F4CA TODAY: {{ sect_dashboard_today[:80]
+          }}...\n\U0001F319 NIGHT: {{ sect_dashboard_night[:60] }}...\n\U0001F399️
+          TTS: {{ sect_morning_tts[:100] }}...\n\nFingerprint: {{ current_fingerprint
+          }}\n"
+        notification_id: weather_ai_pack_dry_run
+    - stop: Dry run complete - cache NOT modified
+  - alias: Save to cache
+    choose:
+    - conditions:
+      - condition: template
+        value_template: '{{ is_valid }}'
+      sequence:
+      - action: input_text.set_value
+        target:
+          entity_id: input_text.weather_ai_pack_fingerprint
+        data:
+          value: '{{ current_fingerprint }}'
+      - action: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.weather_ai_pack_generated_at
+        data:
+          datetime: '{{ now().strftime(''%Y-%m-%d %H:%M:%S'') }}'
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.weather_ai_pack_stale
+      - event: weather_ai_pack_updated
+        event_data:
+          status: success
+          generated_at: '{{ now().isoformat() }}'
+          fingerprint: '{{ current_fingerprint }}'
+          stale: false
+          dashboard:
+            today: '{{ sect_dashboard_today }}'
+            night: '{{ sect_dashboard_night }}'
+            tomorrow: '{{ sect_dashboard_tomorrow }}'
+          morning:
+            tts: '{{ sect_morning_tts }}'
+            pawel: '{{ sect_morning_pawel }}'
+            magda: '{{ sect_morning_magda }}'
+          evening:
+            tts: '{{ sect_evening_tts }}'
+            pawel: '{{ sect_evening_pawel }}'
+            magda: '{{ sect_evening_magda }}'
+      - action: persistent_notification.create
+        data:
+          title: ✅ Weather AI Pack
+          message: Cache zaktualizowany pomyślnie
+          notification_id: weather_ai_success
+    default:
+    - action: input_boolean.turn_on
+      target:
+        entity_id: input_boolean.weather_ai_pack_stale
+    - event: weather_ai_pack_updated
+      event_data:
+        status: stale
+        generated_at: '{{ states(''input_datetime.weather_ai_pack_generated_at'')
+          }}'
+        fingerprint: '{{ states(''input_text.weather_ai_pack_fingerprint'') }}'
+        stale: true
+        dashboard:
+          today: '{{ state_attr(''sensor.weather_ai_pack_cache'', ''dashboard_today'')
+            | default(''Problem z AI.'') }}'
+          night: '{{ state_attr(''sensor.weather_ai_pack_cache'', ''dashboard_night'')
+            | default(''Sprawdź później.'') }}'
+          tomorrow: '{{ state_attr(''sensor.weather_ai_pack_cache'', ''dashboard_tomorrow'')
+            | default(''Niedostępne.'') }}'
+        morning:
+          tts: '{{ state_attr(''sensor.weather_ai_pack_cache'', ''morning_tts'') |
+            default(''Brak prognozy.'') }}'
+          pawel: '{{ state_attr(''sensor.weather_ai_pack_cache'', ''morning_pawel'')
+            | default(''Cache error'') }}'
+          magda: '{{ state_attr(''sensor.weather_ai_pack_cache'', ''morning_magda'')
+            | default(''Cache error'') }}'
+        evening:
+          tts: '{{ state_attr(''sensor.weather_ai_pack_cache'', ''evening_tts'') |
+            default(''Brak prognozy.'') }}'
+          pawel: '{{ state_attr(''sensor.weather_ai_pack_cache'', ''evening_pawel'')
+            | default(''Cache error'') }}'
+          magda: '{{ state_attr(''sensor.weather_ai_pack_cache'', ''evening_magda'')
+            | default(''Cache error'') }}'
+    - action: persistent_notification.create
+      data:
+        title: ⚠️ Weather AI Pack - Fallback
+        message: '{{ debug_msg }}'
+        notification_id: weather_ai_error
+energy_ai_pack_generator:
+  alias: Energy AI Pack Generator
+  description: Generuje teksty o cenach energii w jednym wywołaniu AI.
+  mode: single
+  max_exceeded: silent
+  fields:
+    force_regenerate:
+      name: Force Regenerate
+      required: false
+      default: false
+      selector:
+        boolean:
+    dry_run:
+      name: Dry Run
+      required: false
+      default: false
+      selector:
+        boolean:
+  sequence:
+  - alias: Check Pstryk availability
+    if:
+    - condition: template
+      value_template: '{{ states(''sensor.pstryk_buy_price'') in [''unknown'', ''unavailable'']
+        }}'
+    then:
+    - action: persistent_notification.create
+      data:
+        title: ⚠️ Energy AI Pack
+        message: Sensor Pstryk niedostępny
+        notification_id: energy_ai_error
+    - stop: Pstryk sensor unavailable
+  - alias: Extract price data
+    variables:
+      thresh_super: 0.75
+      thresh_high: 1.05
+      pstryk_today_raw: '{{ state_attr(''sensor.pstryk_buy_price'', ''prices_today'')
+        or [] }}'
+      pstryk_tomorrow_raw: '{{ state_attr(''sensor.pstryk_buy_price'', ''prices_tomorrow'')
+        or [] }}'
+      current_hour: '{{ now().hour }}'
+      tomorrow_prices_list: '{{ pstryk_tomorrow_raw | map(attribute=''price'') | list
+        }}'
+      tomorrow_all_zero: '{{ pstryk_tomorrow_raw | count > 0 and tomorrow_prices_list
+        | unique | list == [0.0] }}'
+      tomorrow_valid: '{{ pstryk_tomorrow_raw | count >= 20 and not tomorrow_all_zero
+        }}'
+      pstryk_tomorrow: "{% set ns = namespace(seen=[], result=[]) %} {% if tomorrow_valid
+        %}\n  {% for item in pstryk_tomorrow_raw %}\n    {% set hour = (item.time
+        | as_timestamp | timestamp_custom('%H')) %}\n    {% if hour not in ns.seen
+        %}\n      {% set ns.seen = ns.seen + [hour] %}\n      {% set ns.result = ns.result
+        + [item] %}\n    {% endif %}\n  {% endfor %}\n{% endif %} {{ ns.result }}\n"
+      today_remaining: "{% set ns = namespace(items=[]) %} {% for item in pstryk_today_raw
+        %}\n  {% set h = (item.time | as_timestamp | timestamp_custom('%H')) | int(0)
+        %}\n  {% if h >= current_hour | int %}\n    {% set ns.items = ns.items + [{'h':
+        h, 'p': item.price | float(0)}] %}\n  {% endif %}\n{% endfor %} {{ ns.items
+        }}\n"
+      today_super: '{{ today_remaining | selectattr(''p'', ''<'', thresh_super) |
+        map(attribute=''h'') | list }}'
+      today_normal: '{{ today_remaining | selectattr(''p'', ''>='', thresh_super)
+        | selectattr(''p'', ''<'', thresh_high) | map(attribute=''h'') | list }}'
+      today_peak: '{{ today_remaining | selectattr(''p'', ''>='', thresh_high) | map(attribute=''h'')
+        | list }}'
+      night_prices: "{% set ns = namespace(items=[]) %} {% if tomorrow_valid %}\n
+        \ {% for item in pstryk_tomorrow %}\n    {% set h = (item.time | as_timestamp
+        | timestamp_custom('%H')) | int(0) %}\n    {% if h < 6 %}\n      {% set ns.items
+        = ns.items + [{'h': h, 'p': item.price | float(0)}] %}\n    {% endif %}\n
+        \ {% endfor %}\n{% endif %} {{ ns.items }}\n"
+      night_cheap_count: '{{ night_prices | selectattr(''p'', ''<'', thresh_high)
+        | list | count }}'
+      night_super_count: '{{ night_prices | selectattr(''p'', ''<'', thresh_super)
+        | list | count }}'
+      night_full_cheap: '{{ night_cheap_count >= 5 }}'
+      night_hours: "{% if not tomorrow_valid %}Brak danych {% elif night_full_cheap
+        %}00:00 - 06:00 {% else %}\n  {% set ns = namespace(hs=[]) %}\n  {% for item
+        in night_prices %}\n    {% if item.p < thresh_high %}\n      {% set ns.hs
+        = ns.hs + [item.h | string ~ ':00'] %}\n    {% endif %}\n  {% endfor %}\n
+        \ {{ ns.hs | join(', ') if ns.hs else 'Brak tanich godzin' }}\n{% endif %}\n"
+      day_prices: "{% set ns = namespace(items=[]) %} {% if tomorrow_valid %}\n  {%
+        for item in pstryk_tomorrow %}\n    {% set h = (item.time | as_timestamp |
+        timestamp_custom('%H')) | int(0) %}\n    {% if h >= 6 %}\n      {% set ns.items
+        = ns.items + [{'h': h, 'p': item.price | float(0)}] %}\n    {% endif %}\n
+        \ {% endfor %}\n{% endif %} {{ ns.items }}\n"
+      day_super: '{{ day_prices | selectattr(''p'', ''<'', thresh_super) | map(attribute=''h'')
+        | list }}'
+      day_normal: '{{ day_prices | selectattr(''p'', ''>='', thresh_super) | selectattr(''p'',
+        ''<'', thresh_high) | map(attribute=''h'') | list }}'
+      day_peak: '{{ day_prices | selectattr(''p'', ''>='', thresh_high) | map(attribute=''h'')
+        | list }}'
+      current_fingerprint: "{% set ns = namespace(prices=[]) %} {% for item in today_remaining
+        %}\n  {% set ns.prices = ns.prices + [(item.p * 10) | round(0)] %}\n{% endfor
+        %} {% if tomorrow_valid %}\n  {% for item in pstryk_tomorrow %}\n    {% set
+        ns.prices = ns.prices + [(item.price | float(0) * 10) | round(0)] %}\n  {%
+        endfor %}\n{% endif %} {{ ns.prices[:30] | join(',') }}\n"
+      prev_fingerprint: '{{ states(''input_text.energy_ai_pack_fingerprint'') | default('''')
+        }}'
+      cache_age: '{{ states(''sensor.energy_ai_pack_age_minutes'') | int(9999) }}'
+      should_regenerate: '{{ (force_regenerate | default(false)) == true or current_fingerprint
+        != prev_fingerprint or cache_age > 720 }}'
+      prices_snapshot:
+        today_remaining_count: '{{ today_remaining | count }}'
+        tomorrow_count: '{{ pstryk_tomorrow | count }}'
+        tomorrow_valid: '{{ tomorrow_valid }}'
+        today_super: '{{ today_super }}'
+        day_super: '{{ day_super }}'
+  - alias: Check if regeneration needed
+    if:
+    - condition: template
+      value_template: '{{ not should_regenerate and (dry_run | default(false)) !=
+        true }}'
+    then:
+    - stop: Fingerprint unchanged - skipping AI call
+  - alias: Build AI prompt
+    variables:
+      mega_prompt: "Jesteś asystentem cen energii. Generujesz 6 sekcji (separatory
+        ###NAZWA### w osobnej linii). ZASADY: Bez Markdown (bez ** i __). Dashboard
+        bez konkretnych cen PLN. TTS liczby SŁOWNIE.\nPROGI: Super < {{ thresh_super
+        }} PLN, Wysoki > {{ thresh_high }} PLN\nDANE: Dziś pozostałe: Super={{ today_super
+        if today_super else 'brak' }}, Normal={{ today_normal if today_normal else
+        'brak' }}, Peak={{ today_peak if today_peak else 'brak' }} {% if tomorrow_valid
+        %} Jutro noc 00-06: {{ 'Cała noc tania' if night_full_cheap else 'Częściowo
+        tania: ' ~ night_hours }} Jutro dzień 06-23: Super={{ day_super if day_super
+        else 'brak' }}, Normal={{ day_normal if day_normal else 'brak' }}, Peak={{
+        day_peak if day_peak else 'brak' }} {% else %} Jutro: BRAK DANYCH (pojawią
+        się po 13:15) {% endif %}\nGENERUJ SEKCJE:\n###DASHBOARD_TODAY###  2 zdania
+        o pozostałych godzinach dziś. Emotikony OK. Jeśli są super okazje - podkreśl.
+        Max 120 znaków.\n###DASHBOARD_NIGHT### 1-2 zdania o nocy jutro (00-06). Czy
+        cała noc tania? Jeśli brak danych - napisz. Max 100 znaków.\n###DASHBOARD_TOMORROW###
+        Jutrzejszy dzień (06-23). Użyj etykiet: \U0001F4C9 Super Okazje, \U0001F610
+        Standard, \U0001F534 Szczyt. Podaj przedziały godzin (łącz sąsiednie, np.
+        [13,14,15] → \"13:00-16:00\"). Dodaj werdykt strategiczny. Max 200 znaków.
+        {% if not tomorrow_valid %}Napisz: \"Dane na jutro dostępne po 13:15\"{% endif
+        %}\n###TACTICAL_TTS### Krótki update poranny (dla 09:15). Styl: \"Dziś po
+        południu tanio/drogo\".  Liczby SŁOWNIE (trzynasta, szesnasta). Max 100 znaków.\n###STRATEGIC_TTS###
+        Plan na jutro (dla 13:20/21:05). Styl: \"Jutro najlepiej korzystać o...\".
+        Liczby SŁOWNIE. {% if not tomorrow_valid %}Powiedz że dane niedostępne.{%
+        endif %} Max 150 znaków.\n###STRATEGIC_PUSH### Analiza push notification.
+        Format listy z emoji. Cyfry OK (13:00-16:00). Zawrzyj: dziś reszta + jutro
+        noc + jutro dzień + werdykt. Max 250 znaków.\n"
+  - alias: Call AI
+    action: conversation.process
+    data:
+      text: '{{ mega_prompt }}'
+      agent_id: conversation.google_ai_conversation
+    response_variable: ai_result
+    continue_on_error: true
+  - alias: Parse AI response
+    variables:
+      raw_text_dirty: "{% if ai_result is defined and ai_result is mapping %}\n  {%
+        set resp = ai_result.get('response') %}\n  {% if resp is mapping %}\n    {%
+        set speech = resp.get('speech') %}\n    {% if speech is mapping %}\n      {%
+        set plain = speech.get('plain') %}\n      {% if plain is mapping %}\n        {{
+        plain.get('speech', '') }}\n      {% else %}{{ '' }}{% endif %}\n    {% else
+        %}{{ '' }}{% endif %}\n  {% else %}{{ '' }}{% endif %}\n{% else %}{{ '' }}{%
+        endif %}\n"
+      raw_text: '{{ raw_text_dirty | replace(''***'', '''') | replace(''**'', '''')
+        | replace(''__'', '''') | replace(''`'', '''') }}'
+      has_all_sections: "{{ '###DASHBOARD_TODAY###' in raw_text \n   and '###DASHBOARD_NIGHT###'
+        in raw_text\n   and '###DASHBOARD_TOMORROW###' in raw_text\n   and '###TACTICAL_TTS###'
+        in raw_text\n   and '###STRATEGIC_TTS###' in raw_text\n   and '###STRATEGIC_PUSH###'
+        in raw_text }}\n"
+      is_valid: '{{ has_all_sections and raw_text | length > 50 }}'
+      sect_dashboard_today: '{% if is_valid %}{{ raw_text.split(''###DASHBOARD_TODAY###'')[1].split(''###'')[0]
+        | trim | truncate(150) }} {% else %}Dane cenowe niedostępne.{% endif %}
+
+        '
+      sect_dashboard_night: '{% if is_valid %}{{ raw_text.split(''###DASHBOARD_NIGHT###'')[1].split(''###'')[0]
+        | trim | truncate(120) }} {% else %}Sprawdź po 13:15.{% endif %}
+
+        '
+      sect_dashboard_tomorrow: '{% if is_valid %}{{ raw_text.split(''###DASHBOARD_TOMORROW###'')[1].split(''###'')[0]
+        | trim | truncate(250) }} {% else %}Dane na jutro niedostępne.{% endif %}
+
+        '
+      sect_tactical_tts: '{% if is_valid %}{{ raw_text.split(''###TACTICAL_TTS###'')[1].split(''###'')[0]
+        | trim | truncate(120) }} {% else %}Sprawdź ceny w aplikacji.{% endif %}
+
+        '
+      sect_strategic_tts: '{% if is_valid %}{{ raw_text.split(''###STRATEGIC_TTS###'')[1].split(''###'')[0]
+        | trim | truncate(180) }} {% else %}Dane na jutro jeszcze niedostępne.{% endif
+        %}
+
+        '
+      sect_strategic_push: '{% if is_valid %}{{ raw_text.split(''###STRATEGIC_PUSH###'')[1].split(''###'')[0]
+        | trim | truncate(300) }} {% else %}⚠️ Cache cenowy niedostępny{% endif %}
+
+        '
+      debug_msg: 'Valid: {{ is_valid }} | Sections: {{ has_all_sections }} | Len:
+        {{ raw_text | length }} | Tomorrow: {{ tomorrow_valid }}'
+  - alias: Handle dry run
+    if:
+    - condition: template
+      value_template: '{{ (dry_run | default(false)) == true }}'
+    then:
+    - action: persistent_notification.create
+      data:
+        title: "\U0001F9EA Energy AI-Pack Dry Run"
+        message: "{{ debug_msg }}\n\n⚡ TODAY: {{ sect_dashboard_today[:80] }}...\n\U0001F319
+          NIGHT: {{ sect_dashboard_night[:60] }}...\n\U0001F4CA TOMORROW: {{ sect_dashboard_tomorrow[:100]
+          }}...\n\U0001F399️ TACTICAL: {{ sect_tactical_tts[:80] }}...\n\nFingerprint:
+          {{ current_fingerprint[:50] }}...\n"
+        notification_id: energy_ai_pack_dry_run
+    - stop: Dry run complete
+  - alias: Save to cache
+    choose:
+    - conditions:
+      - condition: template
+        value_template: '{{ is_valid }}'
+      sequence:
+      - action: input_text.set_value
+        target:
+          entity_id: input_text.energy_ai_pack_fingerprint
+        data:
+          value: '{{ current_fingerprint }}'
+      - action: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.energy_ai_pack_generated_at
+        data:
+          datetime: '{{ now().strftime(''%Y-%m-%d %H:%M:%S'') }}'
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.energy_ai_pack_stale
+      - event: energy_ai_pack_updated
+        event_data:
+          status: success
+          generated_at: '{{ now().isoformat() }}'
+          fingerprint: '{{ current_fingerprint }}'
+          stale: false
+          dashboard:
+            today: '{{ sect_dashboard_today }}'
+            night: '{{ sect_dashboard_night }}'
+            tomorrow: '{{ sect_dashboard_tomorrow }}'
+          tactical:
+            tts: '{{ sect_tactical_tts }}'
+          strategic:
+            tts: '{{ sect_strategic_tts }}'
+            pawel: '{{ sect_strategic_push }}'
+            magda: '{{ sect_strategic_push }}'
+          prices_snapshot: '{{ prices_snapshot }}'
+      - action: persistent_notification.create
+        data:
+          title: ✅ Energy AI Pack
+          message: 'Cache zaktualizowany (tomorrow_valid: {{ tomorrow_valid }})'
+          notification_id: energy_ai_success
+    default:
+    - action: input_boolean.turn_on
+      target:
+        entity_id: input_boolean.energy_ai_pack_stale
+    - event: energy_ai_pack_updated
+      event_data:
+        status: stale
+        generated_at: '{{ states(''input_datetime.energy_ai_pack_generated_at'') }}'
+        fingerprint: '{{ states(''input_text.energy_ai_pack_fingerprint'') }}'
+        stale: true
+        dashboard:
+          today: '{{ state_attr(''sensor.energy_ai_pack_cache'', ''dashboard_today'')
+            | default(''Problem z AI.'') }}'
+          night: '{{ state_attr(''sensor.energy_ai_pack_cache'', ''dashboard_night'')
+            | default(''Sprawdź później.'') }}'
+          tomorrow: '{{ state_attr(''sensor.energy_ai_pack_cache'', ''dashboard_tomorrow'')
+            | default(''Niedostępne.'') }}'
+        tactical:
+          tts: '{{ state_attr(''sensor.energy_ai_pack_cache'', ''tactical_tts'') |
+            default(''Sprawdź aplikację.'') }}'
+        strategic:
+          tts: '{{ state_attr(''sensor.energy_ai_pack_cache'', ''strategic_tts'')
+            | default(''Dane niedostępne.'') }}'
+          pawel: '{{ state_attr(''sensor.energy_ai_pack_cache'', ''strategic_pawel'')
+            | default(''Cache error'') }}'
+          magda: '{{ state_attr(''sensor.energy_ai_pack_cache'', ''strategic_magda'')
+            | default(''Cache error'') }}'
+        prices_snapshot: {}
+    - action: persistent_notification.create
+      data:
+        title: ⚠️ Energy AI Pack - Fallback
+        message: '{{ debug_msg }}'
+        notification_id: energy_ai_error
