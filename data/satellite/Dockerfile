@@ -11,7 +11,8 @@ RUN apt-get update && \
 WORKDIR /app
 
 RUN git clone --depth 1 https://github.com/rhasspy/wyoming-satellite.git . && \
-    bash script/setup
+    pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir -e .
 
 # Local sounds override upstream defaults
 COPY sounds/ ./sounds/
