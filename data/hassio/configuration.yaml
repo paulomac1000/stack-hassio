@@ -2,12 +2,7 @@
 homeassistant:
   allowlist_external_dirs:
     - /config
-    - /config/www
-    - /config/www/archive
-    - /config/www/archive/camera_front_door
-    - /config/www/archive/backyard_camera
-    - /config/www/archive/camera_gate
-    - /config/www/archive/camera_livingroom
+    - /media
   external_url: "https://hassio.cleverdevelopment.pl"
   internal_url: "http://192.168.0.101:8123"
 

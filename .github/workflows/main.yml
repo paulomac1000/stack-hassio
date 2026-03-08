@@ -124,6 +124,14 @@ jobs:
             sleep 3
           done
 
+      - name: Prepare secrets stub for CI
+        run: cp data/hassio/secrets.example.yaml data/hassio/secrets.yaml
+
+      - name: Stub Google service account JSON
+        run: |
+          echo '{"type":"service_account","project_id":"ci-stub","private_key_id":"ci","private_key":"","client_email":"ci@ci-stub.iam.gserviceaccount.com","client_id":"","auth_uri":"","token_uri":"","auth_provider_x509_cert_url":"","client_x509_cert_url":""}' \
+            > data/hassio/hassio-382116-214eb11e0073.json
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:

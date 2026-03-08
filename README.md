@@ -1,77 +1,79 @@
-# Smart Home Stack - Home Assistant
+# Smart Home Stack — Home Assistant
 
-Infrastructure as Code dla systemu automatyki domowej opartego na Home Assistant.
+Infrastructure as Code for a Docker-based home automation system built on Home Assistant.
 
-## 🏗️ Architektura
+## Architecture
 
-Stack oparty na Docker Compose zawierający:
+Docker Compose stack containing:
 
-- **Home Assistant** - Główny system automatyki domowej
-- **Zigbee2MQTT** - Obsługa urządzeń Zigbee
-- **Mosquitto** - Broker MQTT
-- **Vosk** - Rozpoznawanie mowy (speech-to-text)
-- **YOLO** - Detekcja obiektów (machine learning)
-- **Duplicati** - Backup
-- **Filebrowser** - Zarządzanie plikami
+- **Home Assistant** — Core home automation platform
+- **Zigbee2MQTT** — Zigbee device bridge
+- **Mosquitto** — MQTT broker
+- **Vosk** — Speech-to-text (Wyoming protocol)
+- **Porcupine** — Wake word detection
+- **Wyoming Satellite** — Voice satellite
+- **YOLO** — Object detection (ML)
+- **Filebrowser** — File management UI
+- **Cloudflared** — Cloudflare Tunnel for remote access
 
-## 📋 Wymagania
+## Requirements
 
 - Docker & Docker Compose
-- Linux host (testowane na Debian/Ubuntu)
-- Min. 4GB RAM
-- Min. 32GB wolnego miejsca na dysku
+- Linux host (tested on Debian/Ubuntu)
+- Min. 4 GB RAM
+- Min. 32 GB free disk space
 
-## 🚀 Instalacja
+## Installation
 
-### 1. Sklonuj repozytorium
+### 1. Clone the repository
 
 ```bash
 git clone git@github.com:paulomac1000/stack-hassio.git
 cd stack-hassio
 ```
 
-### 2. Skonfiguruj zmienne środowiskowe
+### 2. Configure environment variables
 
 ```bash
 cp .env.example .env
 nano .env
 ```
 
-### 3. Skonfiguruj sekrety Home Assistant
+### 3. Configure Home Assistant secrets
 
 ```bash
 cp data/hassio/secrets.example.yaml data/hassio/secrets.yaml
 nano data/hassio/secrets.yaml
 ```
 
-### 4. Uruchom stack
+### 4. Start the stack
 
 ```bash
 docker-compose up -d
 ```
 
-### 5. Otwórz Home Assistant
+### 5. Open Home Assistant
 
-```
+```text
 http://your-host-ip:8123
 ```
 
-## 📁 Struktura projektu
+## Project Structure
 
-```
+```text
 .
-├── docker-compose.yml          # Główna konfiguracja Docker Compose
-├── .env.example                # Szablon zmiennych środowiskowych
-├── yolov5-app/                 # Aplikacja YOLO do detekcji obiektów
+├── docker-compose.yml          # Main Docker Compose configuration
+├── .env.example                # Environment variable template
+├── yolov5-app/                 # YOLO object detection service
 │   ├── Dockerfile
 │   ├── app.py
 │   └── requirements.txt
-└── data/                       # Dane i konfiguracje usług
+└── data/                       # Service data and configuration
     ├── hassio/                 # Home Assistant
     │   ├── configuration.yaml
     │   ├── automations.yaml
     │   ├── scripts.yaml
-    │   ├── secrets.yaml        # NIE commitowane (secrets!)
+    │   ├── secrets.yaml        # NOT committed (contains secrets)
     │   ├── themes/
     │   ├── blueprints/
     │   └── custom_components/
@@ -79,54 +81,50 @@ http://your-host-ip:8123
     │   ├── configuration.yaml
     │   └── devices.yaml
     ├── mqtt/                   # Mosquitto
-    ├── vosk/                   # Vosk STT
     ├── satellite/              # Wyoming satellite
-    └── duplicati/              # Backup
+    └── filebrowser/            # Filebrowser config
 ```
 
-## 🔒 Bezpieczeństwo
+## Security
 
-### Pliki NIE commitowane do repozytorium:
+### Files NOT committed to the repository
 
-- `.env` - zmienne środowiskowe (zawiera tokeny)
-- `data/hassio/secrets.yaml` - sekrety HA
-- `data/hassio/.storage/` - tokeny, auth, certyfikaty
-- `*.db` - bazy danych
-- `*.log` - logi
-- `data/hassio/backups/` - kopie zapasowe
-- `data/hassio/www/archive/` - nagrania z kamer
-- Modele ML (`.pt`, `.mdl`)
+- `.env` — environment variables (contains tokens)
+- `data/hassio/secrets.yaml` — HA secrets
+- `data/hassio/.storage/` — tokens, auth, certificates
+- `*.db` — databases
+- `*.log` — logs
+- `data/hassio/backups/` — backups
+- `data/hassio/www/archive/` — camera recordings
+- ML models (`.pt`, `.mdl`)
 
-### Szablony do konfiguracji:
+### Configuration templates
 
-- `.env.example` - wzór zmiennych środowiskowych
-- `data/hassio/secrets.example.yaml` - wzór sekretów
+- `.env.example` — environment variable template
+- `data/hassio/secrets.example.yaml` — secrets template
 
-## 🛠️ Zarządzanie
+## Management
 
-### Sprawdź status usług
+### Check service status
 
 ```bash
 docker-compose ps
 ```
 
-### Restart usługi
+### Restart a service
 
 ```bash
 docker-compose restart homeassistant
 ```
 
-### Logi
+### View logs
 
 ```bash
 docker-compose logs -f homeassistant
 ```
 
-### Backup
+### Manual backup
 
-Duplicati automatycznie tworzy backup codziennie o 2:00.
-
-Ręczny backup:
 ```bash
 cd data/hassio
 tar -czf backup-$(date +%Y%m%d).tar.gz \
@@ -134,80 +132,75 @@ tar -czf backup-$(date +%Y%m%d).tar.gz \
   themes/ blueprints/ custom_components/
 ```
 
-## 🧪 Testowanie
+## Testing
 
-Projekt zawiera testy jednostkowe i integracyjne.
+The project includes unit and integration tests.
 
-### 1. Testy w VS Code
-Dzięki dodanej konfiguracji `.vscode/settings.json`, testy są automatycznie wykrywane w karcie **Testing** (ikona probówki) w VS Code.
+### 1. Tests in VS Code
 
-### 2. Automatyczne testy przy starcie
-Podczas uruchamiania stacka (`docker compose up`), automatycznie uruchamia się usługa `unit-tests`, która sprawdza poprawność logiki w kontenerze. Wyniki zobaczysz w logach.
+With the included `.vscode/settings.json`, tests are automatically discovered in the **Testing** tab (flask icon).
 
-### 3. Ręczne uruchamianie testów
+### 2. Run tests manually
+
 ```bash
-# Wszystkie testy (wymaga kontenera testowego)
-./scripts/run-tests.sh --unit
+# Unit tests
+pytest tests/test_heating_macros.py yolov5-app/test_app.py -v
 
-# Testy integracyjne (wymaga działających usług, np. Mosquitto)
+# Integration tests (requires running services)
+pytest tests/test_integration.py -v
+```
+
+### 3. CI script
+
+```bash
+./scripts/run-tests.sh --unit
 ./scripts/run-tests.sh --integration
 ```
 
-## 📝 Konwencje
+## Commit Conventions
 
-### Commitowanie zmian
+- `feat:` — new feature
+- `fix:` — bug fix
+- `chore:` — infrastructure changes
+- `docs:` — documentation
 
-Tylko pliki konfiguracyjne i kod:
-
-```bash
-git add data/hassio/configuration.yaml
-git add data/hassio/automations.yaml
-git commit -m "feat: add new automation for lights"
-git push
-```
-
-### Nazewnictwo commitów
-
-- `feat:` - nowa funkcjonalność
-- `fix:` - poprawka błędu
-- `chore:` - zmiany infrastrukturalne
-- `docs:` - dokumentacja
-
-## 🔧 Konfiguracja zaawansowana
+## Advanced Configuration
 
 ### Cloudflare Tunnel
 
-W `.env` ustaw:
+In `.env` set:
+
 ```bash
 TUNNEL_TOKEN=your_cloudflare_tunnel_token
 ```
 
 ### MQTT
 
-Domyślnie:
+Default settings:
+
 - Host: `mosquitto`
 - Port: `1883`
-- Username/Password: w `.env`
+- Username/Password: configured in `.env`
 
-## 🤝 Kontrybuowanie
+## Contributing
 
-1. Fork repozytorium
-2. Stwórz branch (`git checkout -b feature/amazing-feature`)
-3. Commit zmian (`git commit -m 'feat: add amazing feature'`)
-4. Push do brancha (`git push origin feature/amazing-feature`)
-5. Otwórz Pull Request
+1. Fork the repository
+2. Create a branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'feat: add amazing feature'`)
+4. Push the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-## 📄 Licencja
+## License
 
-MIT License - możesz swobodnie używać, modyfikować i dystrybuować.
+MIT License — free to use, modify, and distribute.
 
-## 🙏 Podziękowania
+## Credits
 
 - [Home Assistant](https://www.home-assistant.io/)
 - [Zigbee2MQTT](https://www.zigbee2mqtt.io/)
-- Społeczność open source
+- Open source community
 
 ---
 
-**Uwaga:** To repozytorium zawiera tylko konfigurację (Infrastructure as Code).
-Runtime data (bazy danych, logi, nagrania) są ignorowane przez `.gitignore`.
+**Note:** This repository contains only configuration (Infrastructure as Code).
+Runtime data (databases, logs, recordings) is excluded via `.gitignore`.
