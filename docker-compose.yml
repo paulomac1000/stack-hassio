@@ -291,65 +291,7 @@ services:
       homeassistant:
         condition: service_healthy
 
-  #duplicati:
-  #  container_name: hass-duplicati
-  #  image: lscr.io/linuxserver/duplicati:latest
-  #  environment:
-  #    - PUID=1000
-  #    - PGID=1000
-  #    - TZ=Europe/Warsaw
-  #    - MONO_GC_PARAMS=max-heap-size=192m,soft-heap-limit=128m
-  #    - CLI_ARGS=--webservice-allowed-hostnames=*
-  #    - HA_URL=http://homeassistant:8123
-  #    - HA_TOKEN=${HA_LONG_LIVED_TOKEN}
-  #    - MIN_FREE_SPACE_MB=2048
-  #    - MAX_LOAD_AVERAGE=1.5
-  #    - MIN_FREE_MEMORY_MB=256
-
-    # HARDWARE LIMITS (Supported in Compose v2.4)
-    # These settings are crucial to prevent Duplicati from freezing the system during backup.
-  #  cpus: 0.25      # Limits usage to 25% of one CPU core.
-  #  mem_limit: 384m # Hard RAM limit.
-
-    # DISK I/O PRIORITY
-  #  blkio_config:
-  #    weight: 10    # Lowest possible disk priority (10-1000).
-
-  #  entrypoint: /custom-scripts/entrypoint.sh
-
-  #  volumes:
-  #    - ./data/duplicati/scripts:/custom-scripts:ro
-  #    - ./data/duplicati/config:/config
-  #    - ./data/duplicati/staging:/staging
-  #    - ./data/hassio:/source/homeassistant:ro
-  #    - ./data/z2m:/source/zigbee2mqtt:ro
-  #    - ./data/mqtt:/source/mosquitto:ro
-  #    - ./data/filebrowser:/source/filebrowser:ro
-  #    - /media/hdd:/backups
-
-  #  ports:
-  #    - 8200:8200
-
-  #  restart: unless-stopped
-
-  #  healthcheck:
-  #    test: ["CMD", "curl", "-sf", "http://127.0.0.1:8200/api/v1/systeminfo"]
-  #    interval: 120s
-  #    timeout: 30s
-  #    retries: 3
-  #    start_period: 600s
-
-  #  depends_on:
-  #    homeassistant:
-  #      condition: service_healthy
-
-  #  logging:
-  #    driver: "json-file"
-  #    options:
-  #      max-size: "10m"
-  #      max-file: "3"
-
-  # =============================================================================
+  #=============================================================================
   # STEP 8: TEST RUNNER (Optional/Auto-run)
   # =============================================================================
 
